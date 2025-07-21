@@ -1,6 +1,6 @@
-import { Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
-export default function Index() {
+export default function MainPage() {
   return (
     <View
       style={{
@@ -13,3 +13,7 @@ export default function Index() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+
+})
