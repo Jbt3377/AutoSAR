@@ -30,6 +30,13 @@ allprojects {
     google()
     mavenCentral()
     maven { url 'https://www.jitpack.io' }
+    maven {
+      url 'https://api.mapbox.com/downloads/v2/releases/maven'
+      credentials {
+        username = "jbt3377"
+        password = project.hasProperty('MAPBOX_DOWNLOADS_TOKEN') ? project.MAPBOX_DOWNLOADS_TOKEN : ""
+      }
+    }
   }
 }
 
