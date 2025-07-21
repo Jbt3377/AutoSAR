@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@rnmapbox/maps": "^10.1.39"
+  }
+}
