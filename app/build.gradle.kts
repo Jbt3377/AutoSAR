@@ -57,6 +57,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     // implementation("com.mapbox.maps:android-ndk27:11.14.3")  // if your app does not require 16 KB page size support, the default dependency without -ndk27 can be used
+    implementation("com.google.android.gms:play-services-location:21.2.0") // Location Services Dependency (Google Play Services)
     implementation("com.mapbox.maps:android:11.14.3")
     implementation("com.mapbox.extension:maps-compose-ndk27:11.14.3")
 }
