@@ -33,7 +33,6 @@ import com.example.autosar.models.LocationViewModel
 import com.mapbox.geojson.Point
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
-import com.example.autosar.R
 
 class MainActivity : ComponentActivity() {
 
@@ -117,7 +116,7 @@ fun MapboxMapScreen(locationViewModel: LocationViewModel) {
         Icon(
             painter = painterResource(id = R.drawable.crosshair),
             contentDescription = "Map crosshair",
-            tint = Color.Black, // Adjust color as needed
+            tint = Color.Black,
             modifier = Modifier
                 .align(Alignment.Center)
                 .size(20.dp)
