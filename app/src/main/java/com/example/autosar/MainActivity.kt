@@ -131,9 +131,12 @@ fun MapboxMapScreen(
 
             val marker = rememberIconImage(key = R.drawable.ic_marker, painter = painterResource(R.drawable.ic_marker))
 
-            PointAnnotation(
-                point = Point.fromLngLat(18.06, 59.31),) {
-                iconImage = marker
+            if(markers.isNotEmpty()) {
+                PointAnnotation(
+                    point = markers[0]) {
+                        iconImage = marker
+                        iconSize = 0.05
+                    }
             }
         }
 
