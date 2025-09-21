@@ -37,7 +37,6 @@ import com.mapbox.maps.Style
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
-import com.mapbox.maps.extension.compose.annotation.generated.PolygonAnnotation
 import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotation
 import com.mapbox.maps.extension.compose.annotation.rememberIconImage
 import com.mapbox.maps.extension.compose.style.MapStyle
@@ -131,75 +130,43 @@ fun MapboxMapScreen(
         ) {
             Log.d("MapboxMapScreen", "Markers: $markers")
 
-            val marker = rememberIconImage(key = R.drawable.ic_marker, painter = painterResource(R.drawable.ic_marker))
+            val markerIcon = rememberIconImage(key = R.drawable.ic_marker, painter = painterResource(R.drawable.ic_marker))
 
             if(markers.isNotEmpty()) {
                 val centerPoint = markers[0]
+
+                // IPP Marker
                 PointAnnotation(
                     point = centerPoint
                 ) {
-                    iconImage = marker
+                    iconImage = markerIcon
                     iconSize = 0.05
                 }
 
-                val rangeRing1 = TurfTransformation.circle(
-                    centerPoint,
-                    300.0,
-                    360,
-                    TurfConstants.UNIT_METERS
+                // Temporarily hardcoded range ring values
+                val rangeRingConfigs = listOf(
+                    300.0,   // 25% Range Ring
+                    1000.0,  // 50% Range Ring
+                    2400.0,  // 75% Range Ring
+                    12800.0  // 95% Range Ring
                 )
 
-                // 25% Range Ring
-                PolylineAnnotation(
-                    points = rangeRing1.coordinates()[0]
-                ) {
-                    lineColor = Color.Black
-                    lineOpacity = 1.0
-                }
+                // Add range rings
+                rangeRingConfigs.forEach { radiusInMeters ->
+                    val ringPolygon = TurfTransformation.circle(
+                        centerPoint,
+                        radiusInMeters,
+                        360,
+                        TurfConstants.UNIT_METERS
+                    )
 
-                val rangeRing2 = TurfTransformation.circle(
-                    centerPoint,
-                    1000.0, // 300m
-                    360,
-                    TurfConstants.UNIT_METERS
-                )
-
-                // 50% Range Ring
-                PolylineAnnotation(
-                    points = rangeRing2.coordinates()[0]
-                ) {
-                    lineColor = Color.Black
-                    lineOpacity = 1.0
-                }
-
-                val rangeRing3 = TurfTransformation.circle(
-                    centerPoint,
-                    2400.0,
-                    360,
-                    TurfConstants.UNIT_METERS
-                )
-
-                // 75% Range Ring
-                PolylineAnnotation(
-                    points = rangeRing3.coordinates()[0]
-                ) {
-                    lineColor = Color.Black
-                    lineOpacity = 1.0
-                }
-
-                val rangeRing4 = TurfTransformation.circle(
-                    centerPoint,
-                    12800.0,
-                    360,
-                    TurfConstants.UNIT_METERS
-                )
-
-                // 95% Range Ring
-                PolylineAnnotation(
-                    points = rangeRing4.coordinates()[0]
-                ) {
-                    lineColor = Color.Black
-                    lineOpacity = 1.0
+                    PolylineAnnotation(
+                        points = ringPolygon.coordinates()[0]
+                    ) {
+                        lineColor = Color.Black
+                        lineOpacity = 1.0
+                        lineWidth = 2.0
+                    }
                 }
             }
         }
