@@ -26,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -36,11 +37,16 @@ import com.mapbox.geojson.Point
 import com.mapbox.maps.Style
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
+import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotation
 import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
 import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotationGroup
+import com.mapbox.maps.extension.compose.annotation.generated.PolygonAnnotation
+import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotation
 import com.mapbox.maps.extension.compose.annotation.rememberIconImage
 import com.mapbox.maps.extension.compose.style.MapStyle
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
+import com.mapbox.turf.TurfConstants
+import com.mapbox.turf.TurfTransformation
 
 class MainActivity : ComponentActivity() {
 
@@ -132,11 +138,24 @@ fun MapboxMapScreen(
             val marker = rememberIconImage(key = R.drawable.ic_marker, painter = painterResource(R.drawable.ic_marker))
 
             if(markers.isNotEmpty()) {
+                val centerPoint = markers[0]
                 PointAnnotation(
-                    point = markers[0]) {
-                        iconImage = marker
-                        iconSize = 0.05
-                    }
+                    point = centerPoint
+                ) {
+                    iconImage = marker
+                    iconSize = 0.05
+                }
+
+                val circlePolygon = TurfTransformation.circle(
+                    centerPoint,
+                    500.0, // Radius in meters
+                    360, // Steps (higher value means smoother circle)
+                    TurfConstants.UNIT_METERS
+                )
+
+                PolygonAnnotation(
+                    points = listOf(circlePolygon.coordinates()[0]),
+                )
             }
         }
 
