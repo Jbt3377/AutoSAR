@@ -40,6 +40,7 @@ import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
 import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotation
 import com.mapbox.maps.extension.compose.annotation.rememberIconImage
 import com.mapbox.maps.extension.compose.style.MapStyle
+import com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor
 import com.mapbox.turf.TurfConstants
 import com.mapbox.turf.TurfTransformation
 
@@ -141,6 +142,7 @@ fun MapboxMapScreen(
                 ) {
                     iconImage = markerIcon
                     iconSize = 0.05
+                    iconAnchor = IconAnchor.BOTTOM
                 }
 
                 // Temporarily hardcoded range ring values
