@@ -16,7 +16,7 @@ class MarkerViewModel : ViewModel() {
         _markers.value += point
     }
 
-    private fun clearAllMarkers() {
+    fun clearAllMarkers() {
         Log.d("MarkerViewModel", "Clearing all markers")
         _markers.value = emptyList()
     }
