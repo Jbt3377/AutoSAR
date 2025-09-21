@@ -26,7 +26,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -37,14 +36,11 @@ import com.mapbox.geojson.Point
 import com.mapbox.maps.Style
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
-import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotation
 import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
-import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotationGroup
 import com.mapbox.maps.extension.compose.annotation.generated.PolygonAnnotation
 import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotation
 import com.mapbox.maps.extension.compose.annotation.rememberIconImage
 import com.mapbox.maps.extension.compose.style.MapStyle
-import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
 import com.mapbox.turf.TurfConstants
 import com.mapbox.turf.TurfTransformation
 
@@ -146,16 +142,65 @@ fun MapboxMapScreen(
                     iconSize = 0.05
                 }
 
-                val circlePolygon = TurfTransformation.circle(
+                val rangeRing1 = TurfTransformation.circle(
                     centerPoint,
-                    500.0, // Radius in meters
-                    360, // Steps (higher value means smoother circle)
+                    300.0,
+                    360,
                     TurfConstants.UNIT_METERS
                 )
 
-                PolygonAnnotation(
-                    points = listOf(circlePolygon.coordinates()[0]),
+                // 25% Range Ring
+                PolylineAnnotation(
+                    points = rangeRing1.coordinates()[0]
+                ) {
+                    lineColor = Color.Black
+                    lineOpacity = 1.0
+                }
+
+                val rangeRing2 = TurfTransformation.circle(
+                    centerPoint,
+                    1000.0, // 300m
+                    360,
+                    TurfConstants.UNIT_METERS
                 )
+
+                // 50% Range Ring
+                PolylineAnnotation(
+                    points = rangeRing2.coordinates()[0]
+                ) {
+                    lineColor = Color.Black
+                    lineOpacity = 1.0
+                }
+
+                val rangeRing3 = TurfTransformation.circle(
+                    centerPoint,
+                    2400.0,
+                    360,
+                    TurfConstants.UNIT_METERS
+                )
+
+                // 75% Range Ring
+                PolylineAnnotation(
+                    points = rangeRing3.coordinates()[0]
+                ) {
+                    lineColor = Color.Black
+                    lineOpacity = 1.0
+                }
+
+                val rangeRing4 = TurfTransformation.circle(
+                    centerPoint,
+                    12800.0,
+                    360,
+                    TurfConstants.UNIT_METERS
+                )
+
+                // 95% Range Ring
+                PolylineAnnotation(
+                    points = rangeRing4.coordinates()[0]
+                ) {
+                    lineColor = Color.Black
+                    lineOpacity = 1.0
+                }
             }
         }
 
