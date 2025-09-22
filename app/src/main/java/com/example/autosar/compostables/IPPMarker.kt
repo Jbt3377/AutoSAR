@@ -22,5 +22,5 @@ fun IPPMarker(centerPoint: Point) {
         iconAnchor = IconAnchor.BOTTOM
     }
 
-    MapFeatureAnnotation(centerPoint, 0.0, "IPP")
+    MapFeatureAnnotation(centerPoint, -5.0, "IPP")
 }
