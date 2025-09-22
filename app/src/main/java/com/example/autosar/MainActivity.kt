@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.autosar.compostables.Crosshair
 import com.example.autosar.compostables.IPPMarker
+import com.example.autosar.compostables.RangeRings
 import com.example.autosar.models.LocationViewModel
 import com.example.autosar.models.MarkerViewModel
 import com.mapbox.geojson.Point
@@ -133,8 +134,6 @@ fun MapboxMapScreen(
         ) {
             Log.d("MapboxMapScreen", "Markers: $markers")
 
-            val markerIcon = rememberIconImage(key = R.drawable.ic_marker, painter = painterResource(R.drawable.ic_marker))
-
             if(markers.isNotEmpty()) {
                 val centerPoint = markers[0]
 
@@ -149,23 +148,8 @@ fun MapboxMapScreen(
                     12800.0  // 95% Range Ring
                 )
 
-                // Add range rings
-                rangeRingConfigs.forEach { radiusInMeters ->
-                    val ringPolygon = TurfTransformation.circle(
-                        centerPoint,
-                        radiusInMeters,
-                        360,
-                        TurfConstants.UNIT_METERS
-                    )
-
-                    PolylineAnnotation(
-                        points = ringPolygon.coordinates()[0]
-                    ) {
-                        lineColor = Color.Black
-                        lineOpacity = 1.0
-                        lineWidth = 2.0
-                    }
-                }
+                // Add Range Rings
+                RangeRings(rangeRingConfigs, centerPoint)
             }
         }
 
