@@ -33,17 +33,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.autosar.compostables.Crosshair
+import com.example.autosar.compostables.IPPMarker
 import com.example.autosar.models.LocationViewModel
 import com.example.autosar.models.MarkerViewModel
 import com.mapbox.geojson.Point
 import com.mapbox.maps.Style
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
-import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
 import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotation
 import com.mapbox.maps.extension.compose.annotation.rememberIconImage
 import com.mapbox.maps.extension.compose.style.MapStyle
-import com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor
 import com.mapbox.turf.TurfConstants
 import com.mapbox.turf.TurfTransformation
 
@@ -140,13 +139,7 @@ fun MapboxMapScreen(
                 val centerPoint = markers[0]
 
                 // IPP Marker
-                PointAnnotation(
-                    point = centerPoint
-                ) {
-                    iconImage = markerIcon
-                    iconSize = 0.05
-                    iconAnchor = IconAnchor.BOTTOM
-                }
+                IPPMarker(centerPoint)
 
                 // Temporarily hardcoded range ring values
                 val rangeRingConfigs = listOf(
