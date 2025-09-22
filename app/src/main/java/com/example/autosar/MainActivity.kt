@@ -9,11 +9,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -30,17 +32,20 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.example.autosar.compostables.Crosshair
+import com.example.autosar.compostables.IPPMarker
+import com.example.autosar.compostables.RangeRings
 import com.example.autosar.models.LocationViewModel
 import com.example.autosar.models.MarkerViewModel
 import com.mapbox.geojson.Point
 import com.mapbox.maps.Style
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
-import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
-import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotationGroup
+import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotation
 import com.mapbox.maps.extension.compose.annotation.rememberIconImage
 import com.mapbox.maps.extension.compose.style.MapStyle
-import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
+import com.mapbox.turf.TurfConstants
+import com.mapbox.turf.TurfTransformation
 
 class MainActivity : ComponentActivity() {
 
@@ -129,43 +134,62 @@ fun MapboxMapScreen(
         ) {
             Log.d("MapboxMapScreen", "Markers: $markers")
 
-            val marker = rememberIconImage(key = R.drawable.ic_marker, painter = painterResource(R.drawable.ic_marker))
-
             if(markers.isNotEmpty()) {
-                PointAnnotation(
-                    point = markers[0]) {
-                        iconImage = marker
-                        iconSize = 0.05
-                    }
+                val centerPoint = markers[0]
+
+                // IPP Marker
+                IPPMarker(centerPoint)
+
+                // Temporarily hardcoded range ring values
+                val rangeRingConfigs = listOf(
+                    300.0,   // 25% Range Ring
+                    1000.0,  // 50% Range Ring
+                    2400.0,  // 75% Range Ring
+                    12800.0  // 95% Range Ring
+                )
+
+                // Add Range Rings
+                RangeRings(rangeRingConfigs, centerPoint)
             }
         }
 
-        Icon(
-            painter = painterResource(id = R.drawable.crosshair),
-            contentDescription = "Map crosshair",
-            tint = Color.Black,
-            modifier = Modifier
-                .align(Alignment.Center)
-                .size(20.dp)
+        // Crosshair
+        Crosshair(
+            modifier = Modifier.align(Alignment.Center)
         )
 
-        if (hasPermission) {
-            FloatingActionButton(
-                onClick = {
-                    userLocation?.let { point ->
-                        mapViewportState.setCameraOptions {
-                            zoom(14.0)
-                            center(point)
+        // Action Buttons
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+
+            if(markers.isNotEmpty()){
+                FloatingActionButton(
+                    onClick = { markerViewModel.clearAllMarkers() },
+                ) {
+                    Icon(Icons.Filled.Clear, "Clear map")
+                }
+            }
+
+            // Recenter GPS Button
+            if (hasPermission) {
+                FloatingActionButton(
+                    onClick = {
+                        userLocation?.let { point ->
+                            mapViewportState.setCameraOptions {
+                                zoom(14.0)
+                                center(point)
+                            }
+                        } ?: run {
+                            locationViewModel.fetchLastLocation(context as ComponentActivity)
                         }
-                    } ?: run {
-                        locationViewModel.fetchLastLocation(context as ComponentActivity)
                     }
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp)
-            ) {
-                Icon(Icons.Filled.Place, "Recenter on my location")
+                ) {
+                    Icon(Icons.Filled.Place, "Recenter on my location")
+                }
             }
         }
     }
