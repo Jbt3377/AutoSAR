@@ -42,25 +42,22 @@ fun IPPMarker(centerPoint: Point) {
         options = viewAnnotationOptions {
             geometry(centerPoint)
             annotationAnchor {
-                anchor(ViewAnnotationAnchor.BOTTOM_LEFT)
+                anchor(ViewAnnotationAnchor.TOP)
             }
         }
     ) {
         Surface(
             color = Color.Transparent,
-            shape = MaterialTheme.shapes.medium,
-            modifier = Modifier.padding(4.dp)
+            shape = MaterialTheme.shapes.extraSmall,
         ) {
             val textContent = "IPP"
             val textStyle = MaterialTheme.typography.bodySmall
-            val textModifier = Modifier.padding(8.dp)
 
             Box {
                 // Stroke Text (background layer)
                 Text(
                     text = textContent,
                     color = Color.White,
-                    modifier = textModifier,
                     style = textStyle.merge(
                         TextStyle(
                             drawStyle = Stroke(
@@ -74,7 +71,6 @@ fun IPPMarker(centerPoint: Point) {
                 Text(
                     text = textContent,
                     color = Color.Black,
-                    modifier = textModifier,
                     style = textStyle
                 )
             }
