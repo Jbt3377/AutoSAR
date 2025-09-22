@@ -1,6 +1,9 @@
 # AutoSAR
 
 ## Description
+<p align="left">
+	<img src="./resources/AutoSARLogo.png" width="200" height="200" alt="AutoSAR Logo">
+</p>
 
 AutoSAR is a mobile-first mapping tool designed to streamline Search & Rescue (SAR) planning directly in the field.
 
