@@ -9,26 +9,17 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
 import com.example.autosar.compostables.Crosshair
 import com.example.autosar.compostables.IPPMarker
@@ -106,6 +97,10 @@ fun MapboxMapScreen(
     val hasPermission by locationViewModel.hasPermission.collectAsState()
     val markers by markerViewModel.markers.collectAsState()
 
+    var showForm by remember { mutableStateOf(false) }
+    var pendingPoint by remember { mutableStateOf<Point?>(null) }
+    var radiusInput by remember { mutableStateOf("") }
+
     // move camera when location updates
     LaunchedEffect(userLocation) {
         userLocation?.let { point ->
@@ -122,53 +117,42 @@ fun MapboxMapScreen(
             mapViewportState = mapViewportState,
             style = { MapStyle(style = Style.OUTDOORS) },
             onMapLongClickListener = { point ->
-                markerViewModel.addMarker(point)
+                pendingPoint = point
+                showForm = true
                 true
             }
         ) {
             Log.d("MapboxMapScreen", "Markers: $markers")
 
-            if(markers.isNotEmpty()) {
+            if (markers.isNotEmpty()) {
                 val centerPoint = markers[0]
-
-                // IPP Marker
                 IPPMarker(centerPoint)
 
-                // Temporarily hardcoded range ring values
                 val rangeRingConfigs = listOf(
-                    300.0,   // 25% Range Ring
-                    1000.0,  // 50% Range Ring
-                    2400.0,  // 75% Range Ring
-                    12800.0  // 95% Range Ring
+                    300.0,
+                    1000.0,
+                    2400.0,
+                    12800.0
                 )
-
-                // Add Range Rings
                 RangeRings(rangeRingConfigs, centerPoint)
             }
         }
 
-        // Crosshair
-        Crosshair(
-            modifier = Modifier.align(Alignment.Center)
-        )
+        // Crosshair overlay
+        Crosshair(modifier = Modifier.align(Alignment.Center))
 
-        // Action Buttons
+        // Floating action buttons
         Column(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-
-            if(markers.isNotEmpty()){
-                FloatingActionButton(
-                    onClick = { markerViewModel.clearAllMarkers() },
-                ) {
+            if (markers.isNotEmpty()) {
+                FloatingActionButton(onClick = { markerViewModel.clearAllMarkers() }) {
                     Icon(Icons.Filled.Clear, "Clear map")
                 }
             }
-
-            // Recenter GPS Button
             if (hasPermission) {
                 FloatingActionButton(
                     onClick = {
@@ -183,6 +167,47 @@ fun MapboxMapScreen(
                     }
                 ) {
                     Icon(Icons.Filled.Place, "Recenter on my location")
+                }
+            }
+        }
+
+        if (showForm && pendingPoint != null) {
+            Dialog(onDismissRequest = { showForm = false }) {
+                Surface(shape = MaterialTheme.shapes.medium, tonalElevation = 4.dp) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text("Add Range Rings", style = MaterialTheme.typography.titleMedium)
+                        OutlinedTextField(
+                            value = radiusInput,
+                            onValueChange = { radiusInput = it },
+                            label = { Text("Outer ring radius (m)") }
+                        )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.align(Alignment.End)
+                        ) {
+                            TextButton(onClick = { showForm = false }) {
+                                Text("Cancel")
+                            }
+                            Button(
+                                onClick = {
+                                    val point = pendingPoint
+                                    if (point != null) {
+                                        // add the main marker
+                                        markerViewModel.addMarker(point)
+                                        // you could also pass radiusInput to RangeRings or store it
+                                    }
+                                    showForm = false
+                                    radiusInput = ""
+                                    pendingPoint = null
+                                }
+                            ) {
+                                Text("Confirm")
+                            }
+                        }
+                    }
                 }
             }
         }
