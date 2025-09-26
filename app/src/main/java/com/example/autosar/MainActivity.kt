@@ -86,6 +86,7 @@ fun MapboxMapScreen(
     locationViewModel: LocationViewModel,
     markerViewModel: MarkerViewModel
 ) {
+    val context = LocalContext.current
     val mapViewportState = rememberMapViewportState {
         setCameraOptions {
             zoom(2.0)
@@ -134,6 +135,41 @@ fun MapboxMapScreen(
                     fourthRingRadius ?: 12_800.0
                 )
                 RangeRings(rangeRingConfigs, centerPoint)
+            }
+        }
+
+        // Action Buttons
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+
+            if(markers.isNotEmpty()){
+                FloatingActionButton(
+                    onClick = { markerViewModel.clearAllMarkers() },
+                ) {
+                    Icon(Icons.Filled.Clear, "Clear map")
+                }
+            }
+
+            // Recenter GPS Button
+            if (hasPermission) {
+                FloatingActionButton(
+                    onClick = {
+                        userLocation?.let { point ->
+                            mapViewportState.setCameraOptions {
+                                zoom(14.0)
+                                center(point)
+                            }
+                        } ?: run {
+                            locationViewModel.fetchLastLocation(context as ComponentActivity)
+                        }
+                    }
+                ) {
+                    Icon(Icons.Filled.Place, "Recenter on my location")
+                }
             }
         }
 
