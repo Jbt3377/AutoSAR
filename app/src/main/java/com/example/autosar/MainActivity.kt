@@ -85,7 +85,6 @@ fun MapboxMapScreen(
     locationViewModel: LocationViewModel,
     markerViewModel: MarkerViewModel
 ) {
-    val context = LocalContext.current
     val mapViewportState = rememberMapViewportState {
         setCameraOptions {
             zoom(2.0)
@@ -99,9 +98,10 @@ fun MapboxMapScreen(
 
     var showForm by remember { mutableStateOf(false) }
     var pendingPoint by remember { mutableStateOf<Point?>(null) }
+
+    var fourthRingRadius by remember { mutableStateOf<Double?>(null) }
     var radiusInput by remember { mutableStateOf("") }
 
-    // move camera when location updates
     LaunchedEffect(userLocation) {
         userLocation?.let { point ->
             mapViewportState.setCameraOptions {
@@ -122,8 +122,6 @@ fun MapboxMapScreen(
                 true
             }
         ) {
-            Log.d("MapboxMapScreen", "Markers: $markers")
-
             if (markers.isNotEmpty()) {
                 val centerPoint = markers[0]
                 IPPMarker(centerPoint)
@@ -132,44 +130,13 @@ fun MapboxMapScreen(
                     300.0,
                     1000.0,
                     2400.0,
-                    12800.0
+                    fourthRingRadius ?: 12_800.0
                 )
                 RangeRings(rangeRingConfigs, centerPoint)
             }
         }
 
-        // Crosshair overlay
         Crosshair(modifier = Modifier.align(Alignment.Center))
-
-        // Floating action buttons
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            if (markers.isNotEmpty()) {
-                FloatingActionButton(onClick = { markerViewModel.clearAllMarkers() }) {
-                    Icon(Icons.Filled.Clear, "Clear map")
-                }
-            }
-            if (hasPermission) {
-                FloatingActionButton(
-                    onClick = {
-                        userLocation?.let { point ->
-                            mapViewportState.setCameraOptions {
-                                zoom(14.0)
-                                center(point)
-                            }
-                        } ?: run {
-                            locationViewModel.fetchLastLocation(context as ComponentActivity)
-                        }
-                    }
-                ) {
-                    Icon(Icons.Filled.Place, "Recenter on my location")
-                }
-            }
-        }
 
         if (showForm && pendingPoint != null) {
             Dialog(onDismissRequest = { showForm = false }) {
@@ -179,11 +146,14 @@ fun MapboxMapScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text("Add Range Rings", style = MaterialTheme.typography.titleMedium)
+
                         OutlinedTextField(
                             value = radiusInput,
                             onValueChange = { radiusInput = it },
-                            label = { Text("Outer ring radius (m)") }
+                            label = { Text("Outer ring radius (m)") },
+                            singleLine = true
                         )
+
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             modifier = Modifier.align(Alignment.End)
@@ -195,10 +165,12 @@ fun MapboxMapScreen(
                                 onClick = {
                                     val point = pendingPoint
                                     if (point != null) {
-                                        // add the main marker
                                         markerViewModel.addMarker(point)
-                                        // you could also pass radiusInput to RangeRings or store it
+                                        // parse the number and update the radius state
+                                        fourthRingRadius = radiusInput.toDoubleOrNull()
                                     }
+
+                                    // reset dialog state
                                     showForm = false
                                     radiusInput = ""
                                     pendingPoint = null
