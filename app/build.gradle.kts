@@ -61,4 +61,5 @@ dependencies {
     implementation("com.mapbox.maps:android:11.14.3")
     implementation("com.mapbox.extension:maps-compose-ndk27:11.14.3")
     implementation("com.mapbox.mapboxsdk:mapbox-sdk-turf:6.14.0")
+    implementation("androidx.compose.material:material-icons-extended:<latest_version>")
 }

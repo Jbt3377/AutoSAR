@@ -33,14 +33,14 @@ fun SubjectWizard(
 ) {
     // Define categories with optional default ring radius (metres)
     val categories = listOf(
-        Category("Aircraft", Icons.Default.AccountBox, 12800.0, priority = 1),
-        Category("Abduction", Icons.Default.AccountBox, 1000.0, priority = 2),
-        Category("Water", Icons.Default.AccountBox, 2400.0, priority = 3),
-        Category("Wheel/Motorized", Icons.Default.AccountBox, 5000.0, priority = 4),
-        Category("Mental State", Icons.Default.AccountBox, 3000.0, priority = 5),
-        Category("Child", Icons.Default.AccountBox, 1500.0, priority = 6),
-        Category("Outdoor Activity", Icons.Default.AccountBox, 2000.0, priority = 7),
-        Category("Snow Activity", Icons.Default.AccountBox, 2500.0, priority = 8)
+        Category("Aircraft", Icons.Default.Flight, 12800.0, priority = 1),
+        Category("Abduction", Icons.Default.People, 1100.0, priority = 2),
+        Category("Water", Icons.Default.WaterDrop, 2400.0, priority = 3),
+        Category("Wheel/Motorized", Icons.Default.DirectionsCar, 5000.0, priority = 4),
+        Category("Mental State", Icons.Default.QuestionMark, 3000.0, priority = 5),
+        Category("Child", Icons.Default.Person, 1500.0, priority = 6),
+        Category("Outdoor Activity", Icons.Default.PedalBike, 2000.0, priority = 7),
+        Category("Snow Activity", Icons.Default.Snowmobile, 2500.0, priority = 8)
     )
 
     // Track selected categories
