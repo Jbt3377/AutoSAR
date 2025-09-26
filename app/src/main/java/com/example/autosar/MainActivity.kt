@@ -9,43 +9,29 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
 import com.example.autosar.compostables.Crosshair
 import com.example.autosar.compostables.IPPMarker
 import com.example.autosar.compostables.RangeRings
+import com.example.autosar.compostables.SubjectWizard
 import com.example.autosar.models.LocationViewModel
 import com.example.autosar.models.MarkerViewModel
 import com.mapbox.geojson.Point
 import com.mapbox.maps.Style
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
-import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotation
-import com.mapbox.maps.extension.compose.annotation.rememberIconImage
 import com.mapbox.maps.extension.compose.style.MapStyle
-import com.mapbox.turf.TurfConstants
-import com.mapbox.turf.TurfTransformation
 
 class MainActivity : ComponentActivity() {
 
@@ -112,7 +98,12 @@ fun MapboxMapScreen(
     val hasPermission by locationViewModel.hasPermission.collectAsState()
     val markers by markerViewModel.markers.collectAsState()
 
-    // move camera when location updates
+    var showForm by remember { mutableStateOf(false) }
+    var pendingPoint by remember { mutableStateOf<Point?>(null) }
+
+    // radius for the 4th ring
+    var fourthRingRadius by remember { mutableStateOf<Double?>(null) }
+
     LaunchedEffect(userLocation) {
         userLocation?.let { point ->
             mapViewportState.setCameraOptions {
@@ -128,35 +119,24 @@ fun MapboxMapScreen(
             mapViewportState = mapViewportState,
             style = { MapStyle(style = Style.OUTDOORS) },
             onMapLongClickListener = { point ->
-                markerViewModel.addMarker(point)
+                pendingPoint = point
+                showForm = true
                 true
             }
         ) {
-            Log.d("MapboxMapScreen", "Markers: $markers")
-
-            if(markers.isNotEmpty()) {
+            if (markers.isNotEmpty()) {
                 val centerPoint = markers[0]
-
-                // IPP Marker
                 IPPMarker(centerPoint)
 
-                // Temporarily hardcoded range ring values
                 val rangeRingConfigs = listOf(
-                    300.0,   // 25% Range Ring
-                    1000.0,  // 50% Range Ring
-                    2400.0,  // 75% Range Ring
-                    12800.0  // 95% Range Ring
+                    300.0,
+                    1000.0,
+                    2400.0,
+                    fourthRingRadius ?: 12_800.0
                 )
-
-                // Add Range Rings
                 RangeRings(rangeRingConfigs, centerPoint)
             }
         }
-
-        // Crosshair
-        Crosshair(
-            modifier = Modifier.align(Alignment.Center)
-        )
 
         // Action Buttons
         Column(
@@ -192,5 +172,21 @@ fun MapboxMapScreen(
                 }
             }
         }
+
+        Crosshair(modifier = Modifier.align(Alignment.Center))
+
+        if(showForm && pendingPoint != null){
+            SubjectWizard(
+                pendingPoint = pendingPoint!!,
+                onDismiss = { showForm = false },
+                onConfirm = { point, enteredRadius ->
+                    markerViewModel.addMarker(point)
+                    fourthRingRadius = enteredRadius
+                    showForm = false
+                    pendingPoint = null
+                }
+            )
+        }
     }
 }
+
