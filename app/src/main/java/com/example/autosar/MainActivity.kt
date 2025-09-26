@@ -24,6 +24,7 @@ import androidx.core.content.ContextCompat
 import com.example.autosar.compostables.Crosshair
 import com.example.autosar.compostables.IPPMarker
 import com.example.autosar.compostables.RangeRings
+import com.example.autosar.compostables.SubjectWizard
 import com.example.autosar.models.LocationViewModel
 import com.example.autosar.models.MarkerViewModel
 import com.mapbox.geojson.Point
@@ -99,8 +100,8 @@ fun MapboxMapScreen(
     var showForm by remember { mutableStateOf(false) }
     var pendingPoint by remember { mutableStateOf<Point?>(null) }
 
+    // radius for the 4th ring
     var fourthRingRadius by remember { mutableStateOf<Double?>(null) }
-    var radiusInput by remember { mutableStateOf("") }
 
     LaunchedEffect(userLocation) {
         userLocation?.let { point ->
@@ -138,50 +139,18 @@ fun MapboxMapScreen(
 
         Crosshair(modifier = Modifier.align(Alignment.Center))
 
-        if (showForm && pendingPoint != null) {
-            Dialog(onDismissRequest = { showForm = false }) {
-                Surface(shape = MaterialTheme.shapes.medium, tonalElevation = 4.dp) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Text("Add Range Rings", style = MaterialTheme.typography.titleMedium)
-
-                        OutlinedTextField(
-                            value = radiusInput,
-                            onValueChange = { radiusInput = it },
-                            label = { Text("Outer ring radius (m)") },
-                            singleLine = true
-                        )
-
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.align(Alignment.End)
-                        ) {
-                            TextButton(onClick = { showForm = false }) {
-                                Text("Cancel")
-                            }
-                            Button(
-                                onClick = {
-                                    val point = pendingPoint
-                                    if (point != null) {
-                                        markerViewModel.addMarker(point)
-                                        // parse the number and update the radius state
-                                        fourthRingRadius = radiusInput.toDoubleOrNull()
-                                    }
-
-                                    // reset dialog state
-                                    showForm = false
-                                    radiusInput = ""
-                                    pendingPoint = null
-                                }
-                            ) {
-                                Text("Confirm")
-                            }
-                        }
-                    }
-                }
+        // ✅ use the new dialog composable
+        SubjectWizard(
+            showForm = showForm,
+            pendingPoint = pendingPoint,
+            onDismiss = { showForm = false },
+            onConfirm = { point, enteredRadius ->
+                markerViewModel.addMarker(point)
+                fourthRingRadius = enteredRadius
+                showForm = false
+                pendingPoint = null
             }
-        }
+        )
     }
 }
+
