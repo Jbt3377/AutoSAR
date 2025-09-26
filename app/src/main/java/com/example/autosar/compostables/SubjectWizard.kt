@@ -18,46 +18,43 @@ import com.mapbox.geojson.Point
  */
 @Composable
 fun SubjectWizard(
-    showForm: Boolean,
-    pendingPoint: Point?,
+    pendingPoint: Point,
     onDismiss: () -> Unit,
     onConfirm: (Point, Double?) -> Unit
 ) {
     var radiusInput by remember { mutableStateOf("") }
 
-    if (showForm && pendingPoint != null) {
-        Dialog(onDismissRequest = onDismiss) {
-            Surface(shape = MaterialTheme.shapes.medium, tonalElevation = 4.dp) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(shape = MaterialTheme.shapes.medium, tonalElevation = 4.dp) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text("Add Range Rings", style = MaterialTheme.typography.titleMedium)
+
+                OutlinedTextField(
+                    value = radiusInput,
+                    onValueChange = { radiusInput = it },
+                    label = { Text("Outer ring radius (m)") },
+                    singleLine = true
+                )
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.align(Alignment.End)
                 ) {
-                    Text("Add Range Rings", style = MaterialTheme.typography.titleMedium)
-
-                    OutlinedTextField(
-                        value = radiusInput,
-                        onValueChange = { radiusInput = it },
-                        label = { Text("Outer ring radius (m)") },
-                        singleLine = true
-                    )
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.align(Alignment.End)
+                    TextButton(onClick = onDismiss) {
+                        Text("Cancel")
+                    }
+                    Button(
+                        onClick = {
+                            onConfirm(
+                                pendingPoint,
+                                radiusInput.toDoubleOrNull()
+                            )
+                        }
                     ) {
-                        TextButton(onClick = onDismiss) {
-                            Text("Cancel")
-                        }
-                        Button(
-                            onClick = {
-                                onConfirm(
-                                    pendingPoint,
-                                    radiusInput.toDoubleOrNull()
-                                )
-                            }
-                        ) {
-                            Text("Confirm")
-                        }
+                        Text("Confirm")
                     }
                 }
             }

@@ -139,18 +139,18 @@ fun MapboxMapScreen(
 
         Crosshair(modifier = Modifier.align(Alignment.Center))
 
-        // ✅ use the new dialog composable
-        SubjectWizard(
-            showForm = showForm,
-            pendingPoint = pendingPoint,
-            onDismiss = { showForm = false },
-            onConfirm = { point, enteredRadius ->
-                markerViewModel.addMarker(point)
-                fourthRingRadius = enteredRadius
-                showForm = false
-                pendingPoint = null
-            }
-        )
+        if(showForm && pendingPoint != null){
+            SubjectWizard(
+                pendingPoint = pendingPoint!!,
+                onDismiss = { showForm = false },
+                onConfirm = { point, enteredRadius ->
+                    markerViewModel.addMarker(point)
+                    fourthRingRadius = enteredRadius
+                    showForm = false
+                    pendingPoint = null
+                }
+            )
+        }
     }
 }
 
