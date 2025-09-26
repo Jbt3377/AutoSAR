@@ -27,14 +27,14 @@ fun SubjectWizard(
 ) {
     // Define categories with optional default ring radius (metres)
     val categories = listOf(
-        Category("Aircraft", Icons.Default.Build, 12800.0),
-        Category("Abduction", Icons.Default.Build, 1000.0),
-        Category("Water", Icons.Default.Build, 2400.0),
-        Category("Wheel/Motorized", Icons.Default.Build, 5000.0),
-        Category("Mental State", Icons.Default.Build, 3000.0),
-        Category("Child", Icons.Default.Build, 1500.0),
-        Category("Outdoor Activity", Icons.Default.Build, 2000.0),
-        Category("Snow Activity", Icons.Default.Build, 2500.0)
+        Category("Aircraft", Icons.Default.AccountBox, 12800.0),
+        Category("Abduction", Icons.Default.AccountBox, 1000.0),
+        Category("Water", Icons.Default.AccountBox, 2400.0),
+        Category("Wheel/Motorized", Icons.Default.AccountBox, 5000.0),
+        Category("Mental State", Icons.Default.AccountBox, 3000.0),
+        Category("Child", Icons.Default.AccountBox, 1500.0),
+        Category("Outdoor Activity", Icons.Default.AccountBox, 2000.0),
+        Category("Snow Activity", Icons.Default.AccountBox, 2500.0)
     )
 
     Dialog(onDismissRequest = onDismiss) {
@@ -49,20 +49,30 @@ fun SubjectWizard(
                 )
 
                 // Arrange the 8 icons in a grid (2 columns x 4 rows)
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     categories.chunked(2).forEach { rowItems ->
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                             modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            for (cat in rowItems) {
-                                CategoryButton(
-                                    category = cat,
-                                    onSelect = {
-                                        onConfirm(pendingPoint, cat.defaultRadius)
-                                    }
-                                )
+                            rowItems.forEach { cat ->
+                                // Each cell is a centered square
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .aspectRatio(1.5f),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CategoryButton(
+                                        category = cat,
+                                        onSelect = {
+                                            onConfirm(pendingPoint, cat.defaultRadius)
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
