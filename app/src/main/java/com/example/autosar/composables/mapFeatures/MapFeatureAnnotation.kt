@@ -18,7 +18,6 @@ import com.mapbox.maps.viewannotation.viewAnnotationOptions
 import com.mapbox.turf.TurfConstants
 import com.mapbox.turf.TurfMeasurement
 
-
 @Composable
 fun MapFeatureAnnotation(point: Point, yOffset: Double, textContent: String) {
     val annotationPoint = TurfMeasurement.destination(

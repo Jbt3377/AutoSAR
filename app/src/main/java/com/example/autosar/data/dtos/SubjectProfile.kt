@@ -6,11 +6,4 @@ data class SubjectProfile(
     val activity: String,
     val terrain: String,
     val area: String,
-) {
-    constructor() : this(
-        subject = "",
-        activity = "",
-        terrain = "",
-        area = ""
-    )
-}
+)

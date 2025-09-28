@@ -122,10 +122,10 @@ fun SubjectWizard(
 private fun mapStringToCategory(categoryName: String): Category? {
     return when (categoryName) {
         "Aircraft" -> Category("Aircraft", Icons.Default.Flight, 1)
-        "Abduction" -> Category("Abduction", Icons.Default.People, 2) // Example icon
+        "Abduction" -> Category("Abduction", Icons.Default.People, 2)
         "Water" -> Category("Water", Icons.Default.WaterDrop, 3)
         "Wheel/Motorized" -> Category("Wheel/Motorized", Icons.Default.DirectionsCar, 4)
-        "Mental State" -> Category("Mental State", Icons.Default.QuestionMark, 5) // Example icon
+        "Mental State" -> Category("Mental State", Icons.Default.QuestionMark, 5)
         "Child" -> Category("Child", Icons.Default.Person, 6)
         "Outdoor Activity" -> Category("Outdoor Activity", Icons.Filled.Hiking, 7)
         "Snow Activity" -> Category("Snow Activity", Icons.Default.Snowmobile, 8)

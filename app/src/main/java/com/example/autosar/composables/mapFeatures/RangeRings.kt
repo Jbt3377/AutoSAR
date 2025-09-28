@@ -56,5 +56,6 @@ fun RangeRings(
             centerPoint,
             -radiusInMeters,
             formatRangeRingLabel(index, radiusInMeters)
-        )    }
+        )
+    }
 }

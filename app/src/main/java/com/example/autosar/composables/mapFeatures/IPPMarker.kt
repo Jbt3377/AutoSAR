@@ -8,7 +8,6 @@ import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
 import com.mapbox.maps.extension.compose.annotation.rememberIconImage
 import com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor
 
-
 @Composable
 fun IPPMarker(centerPoint: Point) {
 
