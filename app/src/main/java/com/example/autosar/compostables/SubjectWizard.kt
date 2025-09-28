@@ -91,8 +91,8 @@ fun SubjectWizard(
                                 SubjectProfile(
                                     subject = priorityCategory?.label ?: "",
                                     activity = selectedActivity ?: "",
-                                    terrain = "",
-                                    area = ""
+                                    terrain = "Mountain",
+                                    area = "Temperate"
                                 )
                             )
                         }
