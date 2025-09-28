@@ -4,29 +4,42 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
-import com.example.autosar.compostables.Crosshair
-import com.example.autosar.compostables.IPPMarker
-import com.example.autosar.compostables.RangeRings
-import com.example.autosar.compostables.SubjectWizard
+import com.example.autosar.composables.subjectWizard.SubjectWizard
+import com.example.autosar.composables.mapFeatures.Crosshair
+import com.example.autosar.composables.mapFeatures.IPPMarker
+import com.example.autosar.composables.mapFeatures.RangeRings
+import com.example.autosar.data.dtos.SubjectProfile
 import com.example.autosar.models.LocationViewModel
 import com.example.autosar.models.MarkerViewModel
+import com.example.autosar.data.repositories.LPBRepository
 import com.mapbox.geojson.Point
 import com.mapbox.maps.Style
 import com.mapbox.maps.extension.compose.MapboxMap
@@ -100,9 +113,9 @@ fun MapboxMapScreen(
 
     var showForm by remember { mutableStateOf(false) }
     var pendingPoint by remember { mutableStateOf<Point?>(null) }
+    var subjectProfile by remember { mutableStateOf<SubjectProfile?>(null) }
 
-    // radius for the 4th ring
-    var fourthRingRadius by remember { mutableStateOf<Double?>(null) }
+    val lpbRepository = remember { LPBRepository(context) }
 
     LaunchedEffect(userLocation) {
         userLocation?.let { point ->
@@ -124,17 +137,13 @@ fun MapboxMapScreen(
                 true
             }
         ) {
-            if (markers.isNotEmpty()) {
+            if (markers.isNotEmpty() && subjectProfile != null) {
                 val centerPoint = markers[0]
+
                 IPPMarker(centerPoint)
 
-                val rangeRingConfigs = listOf(
-                    300.0,
-                    1000.0,
-                    2400.0,
-                    fourthRingRadius ?: 12_800.0
-                )
-                RangeRings(rangeRingConfigs, centerPoint)
+                val lpbData = lpbRepository.getRingRadii(subjectProfile!!)
+                lpbData?.ringRadii?.let { RangeRings(it, centerPoint) }
             }
         }
 
@@ -175,13 +184,14 @@ fun MapboxMapScreen(
 
         Crosshair(modifier = Modifier.align(Alignment.Center))
 
-        if(showForm && pendingPoint != null){
+        if (showForm && pendingPoint != null) {
             SubjectWizard(
                 pendingPoint = pendingPoint!!,
+                repository = lpbRepository,
                 onDismiss = { showForm = false },
-                onConfirm = { point, enteredRadius ->
+                onConfirm = { point, profile ->
                     markerViewModel.addMarker(point)
-                    fourthRingRadius = enteredRadius
+                    subjectProfile = profile
                     showForm = false
                     pendingPoint = null
                 }

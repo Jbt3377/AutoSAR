@@ -1,4 +1,4 @@
-package com.example.autosar.compostables
+package com.example.autosar.composables.mapFeatures
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.MaterialTheme
@@ -17,7 +17,6 @@ import com.mapbox.maps.viewannotation.geometry
 import com.mapbox.maps.viewannotation.viewAnnotationOptions
 import com.mapbox.turf.TurfConstants
 import com.mapbox.turf.TurfMeasurement
-
 
 @Composable
 fun MapFeatureAnnotation(point: Point, yOffset: Double, textContent: String) {

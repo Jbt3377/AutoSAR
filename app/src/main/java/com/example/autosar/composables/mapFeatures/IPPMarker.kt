@@ -1,4 +1,4 @@
-package com.example.autosar.compostables
+package com.example.autosar.composables.mapFeatures
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
@@ -7,7 +7,6 @@ import com.mapbox.geojson.Point
 import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
 import com.mapbox.maps.extension.compose.annotation.rememberIconImage
 import com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor
-
 
 @Composable
 fun IPPMarker(centerPoint: Point) {

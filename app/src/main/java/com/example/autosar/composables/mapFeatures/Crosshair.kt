@@ -1,4 +1,4 @@
-package com.example.autosar.compostables
+package com.example.autosar.composables.mapFeatures
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
