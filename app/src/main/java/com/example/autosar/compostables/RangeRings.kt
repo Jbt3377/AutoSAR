@@ -7,10 +7,18 @@ import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotation
 import com.mapbox.turf.TurfConstants
 import com.mapbox.turf.TurfTransformation
 
-
 @Composable
 fun RangeRings(rangeRingConfigs: List<Double>, centerPoint: Point) {
-    rangeRingConfigs.forEach { radiusInMeters ->
+    // Define the percentage labels
+    val percentageLabels = listOf("25%", "50%", "75%", "95%")
+
+    rangeRingConfigs.forEachIndexed { index, radiusInMeters ->
+
+        // Skip ring placement if no data available
+        if (radiusInMeters == 0.0) {
+            return@forEachIndexed
+        }
+
         val ringPolygon = TurfTransformation.circle(
             centerPoint,
             radiusInMeters,
@@ -27,7 +35,9 @@ fun RangeRings(rangeRingConfigs: List<Double>, centerPoint: Point) {
             lineWidth = 2.0
         }
 
+        val labelPrefix = percentageLabels.getOrNull(index) ?: ""
+
         // Range Ring Annotation
-        MapFeatureAnnotation(centerPoint, -radiusInMeters, radiusInMeters.toString() + "m")
+        MapFeatureAnnotation(centerPoint, -radiusInMeters, "${labelPrefix}: ${radiusInMeters}m")
     }
 }
