@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Flight
@@ -25,6 +27,7 @@ import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -192,14 +195,22 @@ private fun ActivityStep(
         modifier = Modifier.padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text("Select ${subject.label} Activity", style = MaterialTheme.typography.titleMedium)
+        Text("Select ${subject.label}", style = MaterialTheme.typography.titleMedium)
         activities.forEach { act ->
-            ListItem(
-                headlineContent = { Text(act) },
+            Box( // Use Box or Row for more control
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onConfirm(act) }
-            )
+                    .padding(vertical = 12.dp) // Control vertical padding here
+            ) {
+                Text(
+                    text = act,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp) // Standard horizontal padding for text
+                        .align(Alignment.CenterStart)
+                )
+            }
         }
         Row(
             Modifier.fillMaxWidth(),
