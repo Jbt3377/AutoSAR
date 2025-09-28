@@ -37,7 +37,7 @@ class LPBRepository(private val context: Context) {
         return SubjectProfileLPBData(subject, activity, terrain, area, rings)
     }
 
-    /** Optional helpers for populating dropdowns in the UI */
+    /** Helpers for populating dropdowns in the UI */
     fun categories(): List<String> = jsonTree.keys.toList()
 
     fun activities(subject: String): List<String> =
@@ -48,7 +48,7 @@ class LPBRepository(private val context: Context) {
             ?.jsonObject?.get(activity)
             ?.jsonObject?.keys?.toList().orEmpty()
 
-    fun areas(subject: String, activity: String, terrain: String): List<String> =
+    fun areaTypes(subject: String, activity: String, terrain: String): List<String> =
         jsonTree[subject]
             ?.jsonObject?.get(activity)
             ?.jsonObject?.get(terrain)

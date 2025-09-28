@@ -1,4 +1,4 @@
-package com.example.autosar.compostables
+package com.example.autosar.composables.mapFeatures
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource

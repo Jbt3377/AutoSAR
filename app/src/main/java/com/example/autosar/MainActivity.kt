@@ -32,10 +32,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import com.example.autosar.compostables.SubjectWizard
-import com.example.autosar.compostables.Crosshair
-import com.example.autosar.compostables.IPPMarker
-import com.example.autosar.compostables.RangeRings
+import com.example.autosar.composables.subjectWizard.SubjectWizard
+import com.example.autosar.composables.mapFeatures.Crosshair
+import com.example.autosar.composables.mapFeatures.IPPMarker
+import com.example.autosar.composables.mapFeatures.RangeRings
 import com.example.autosar.data.dtos.SubjectProfile
 import com.example.autosar.models.LocationViewModel
 import com.example.autosar.models.MarkerViewModel
