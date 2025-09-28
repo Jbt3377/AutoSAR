@@ -8,17 +8,20 @@ import com.mapbox.turf.TurfConstants
 import com.mapbox.turf.TurfTransformation
 
 @Composable
-fun RangeRings(rangeRingConfigs: List<Double>, centerPoint: Point) {
+fun RangeRings(
+    rangeRingConfigs: List<Double>,
+    centerPoint: Point
+) {
+
     // Define the percentage labels
     val percentageLabels = listOf("25%", "50%", "75%", "95%")
 
     rangeRingConfigs.forEachIndexed { index, radiusInMeters ->
 
-        // Skip ring placement if no data available
-        if (radiusInMeters == 0.0) {
-            return@forEachIndexed
-        }
+        // Skip ring placement if no data available.
+        if (radiusInMeters <= 0.0) return@forEachIndexed
 
+        // Create a circular polygon representing this ring.
         val ringPolygon = TurfTransformation.circle(
             centerPoint,
             radiusInMeters,
@@ -26,7 +29,7 @@ fun RangeRings(rangeRingConfigs: List<Double>, centerPoint: Point) {
             TurfConstants.UNIT_METERS
         )
 
-        // Range Ring
+        // Draw the ring as a polyline.
         PolylineAnnotation(
             points = ringPolygon.coordinates()[0]
         ) {
