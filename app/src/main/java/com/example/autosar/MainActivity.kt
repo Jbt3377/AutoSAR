@@ -2,7 +2,6 @@ package com.example.autosar
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -16,8 +15,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -34,15 +33,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import com.example.autosar.composables.subjectWizard.SubjectWizard
+import com.example.autosar.composables.buttons.ExportDialog
 import com.example.autosar.composables.mapFeatures.Crosshair
 import com.example.autosar.composables.mapFeatures.IPPMarker
 import com.example.autosar.composables.mapFeatures.RangeRings
+import com.example.autosar.composables.subjectWizard.SubjectWizard
 import com.example.autosar.data.dtos.SubjectProfile
+import com.example.autosar.data.repositories.LPBRepository
 import com.example.autosar.models.LocationViewModel
 import com.example.autosar.models.MarkerViewModel
-import com.example.autosar.data.repositories.LPBRepository
-import com.example.autosar.services.exportGeoJsonService
 import com.mapbox.geojson.Point
 import com.mapbox.maps.Style
 import com.mapbox.maps.extension.compose.MapboxMap
@@ -114,9 +113,15 @@ fun MapboxMapScreen(
     val hasPermission by locationViewModel.hasPermission.collectAsState()
     val markers by markerViewModel.markers.collectAsState()
 
-    var showForm by remember { mutableStateOf(false) }
+    // Manage Map Features
+    var showSubjectWizard by remember { mutableStateOf(false) }
     var pendingPoint by remember { mutableStateOf<Point?>(null) }
     var subjectProfile by remember { mutableStateOf<SubjectProfile?>(null) }
+
+    // Manage Export
+    var showExportDialog by remember { mutableStateOf(false) }
+    var exportFileName by remember { mutableStateOf("map_export") }
+
 
     val lpbRepository = remember { LPBRepository(context) }
 
@@ -136,7 +141,7 @@ fun MapboxMapScreen(
             style = { MapStyle(style = Style.OUTDOORS) },
             onMapLongClickListener = { point ->
                 pendingPoint = point
-                showForm = true
+                showSubjectWizard = true
                 true
             }
         ) {
@@ -166,26 +171,11 @@ fun MapboxMapScreen(
                 }
 
                 FloatingActionButton(
-                    onClick = {
-                        val uri = exportGeoJsonService(
-                            context = context,
-                            markers = markers,
-                            rangeRings = subjectProfile?.let { lpbRepository.getRingRadii(it)?.ringRadii },
-                            centerPoint = markers.firstOrNull(),
-                            subjectProfile = subjectProfile?.toString()
-                        )
-                        uri?.let {
-                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                type = "application/geo+json"
-                                putExtra(Intent.EXTRA_STREAM, it)
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            }
-                            context.startActivity(Intent.createChooser(shareIntent, "Export GeoJSON"))
-                        }
-                    }
+                    onClick = { showExportDialog = true }
                 ) {
-                    Icon(Icons.Default.Share, contentDescription = "Export")
+                    Icon(Icons.Default.FileDownload, contentDescription = "Export")
                 }
+
 
             }
 
@@ -210,17 +200,30 @@ fun MapboxMapScreen(
 
         Crosshair(modifier = Modifier.align(Alignment.Center))
 
-        if (showForm && pendingPoint != null) {
+        if (showSubjectWizard && pendingPoint != null) {
             SubjectWizard(
                 pendingPoint = pendingPoint!!,
                 repository = lpbRepository,
-                onDismiss = { showForm = false },
+                onDismiss = { showSubjectWizard = false },
                 onConfirm = { point, profile ->
                     markerViewModel.addMarker(point)
                     subjectProfile = profile
-                    showForm = false
+                    showSubjectWizard = false
                     pendingPoint = null
                 }
+            )
+        }
+
+        if (showExportDialog) {
+            ExportDialog(
+                context = context,
+                exportFileName = exportFileName,
+                onFileNameChange = { exportFileName = it },
+                markers = markers,
+                subjectProfile = subjectProfile,
+                lpbRepository = lpbRepository,
+                onDismiss = { showExportDialog = false },
+                onExported = { showExportDialog = false }
             )
         }
     }

@@ -16,7 +16,8 @@ fun exportGeoJsonService(
     markers: List<Point>,
     rangeRings: List<Double>?,
     centerPoint: Point?,
-    subjectProfile: String? = null
+    subjectProfile: String? = null,
+    fileName: String,
 ): Uri? {
     val features = mutableListOf<Feature>()
 
@@ -62,7 +63,7 @@ fun exportGeoJsonService(
 
     val featureCollection = FeatureCollection.fromFeatures(features)
 
-    val file = File(context.cacheDir, "map_export.json")
+    val file = File(context.cacheDir, "${fileName}.json")
     file.writeText(featureCollection.toJson())
 
     return FileProvider.getUriForFile(
