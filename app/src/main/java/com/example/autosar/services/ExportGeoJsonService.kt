@@ -1,8 +1,11 @@
 package com.example.autosar.services
 
+import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
-import androidx.core.content.FileProvider
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import com.example.autosar.data.helpers.formatRangeRingLabel
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
@@ -10,7 +13,6 @@ import com.mapbox.geojson.LineString
 import com.mapbox.geojson.Point
 import com.mapbox.turf.TurfConstants
 import com.mapbox.turf.TurfTransformation
-import java.io.File
 
 fun exportGeoJsonService(
     context: Context,
@@ -26,6 +28,7 @@ fun exportGeoJsonService(
     markers.forEachIndexed { index, point ->
         val feature = Feature.fromGeometry(point).apply {
             addStringProperty("title", if (index == 0) "IPP" else "Marker ${index + 1}")
+            addStringProperty("description", subjectProfile)
             addStringProperty("class", "Marker")
             addStringProperty("marker-symbol", "point")
             addStringProperty("marker-color", "FF0000")
@@ -67,15 +70,24 @@ fun exportGeoJsonService(
     val featureCollection = FeatureCollection.fromFeatures(features)
     val validFileName = validateFileName(fileName)
 
-    // Write to file
-    val file = File(context.cacheDir, "${validFileName}.json")
-    file.writeText(featureCollection.toJson())
+    val contentValues = ContentValues().apply {
+        put(MediaStore.Downloads.DISPLAY_NAME, "${validFileName}.json")
+        put(MediaStore.Downloads.MIME_TYPE, "application/json")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+        }
+    }
 
-    return FileProvider.getUriForFile(
-        context,
-        "${context.packageName}.provider",
-        file
-    )
+    val resolver = context.contentResolver
+    val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+
+    uri?.let {
+        resolver.openOutputStream(it)?.use { out ->
+            out.write(featureCollection.toJson().toByteArray())
+        }
+    }
+
+    return uri
 }
 
 fun validateFileName(fileName: String?): String {
