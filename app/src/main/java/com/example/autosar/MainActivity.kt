@@ -2,6 +2,7 @@ package com.example.autosar
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +42,7 @@ import com.example.autosar.data.dtos.SubjectProfile
 import com.example.autosar.models.LocationViewModel
 import com.example.autosar.models.MarkerViewModel
 import com.example.autosar.data.repositories.LPBRepository
+import com.example.autosar.services.exportGeoJsonService
 import com.mapbox.geojson.Point
 import com.mapbox.maps.Style
 import com.mapbox.maps.extension.compose.MapboxMap
@@ -161,6 +164,29 @@ fun MapboxMapScreen(
                 ) {
                     Icon(Icons.Filled.Clear, "Clear map")
                 }
+
+                FloatingActionButton(
+                    onClick = {
+                        val uri = exportGeoJsonService(
+                            context = context,
+                            markers = markers,
+                            rangeRings = subjectProfile?.let { lpbRepository.getRingRadii(it)?.ringRadii },
+                            centerPoint = markers.firstOrNull(),
+                            subjectProfile = subjectProfile?.toString()
+                        )
+                        uri?.let {
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "application/geo+json"
+                                putExtra(Intent.EXTRA_STREAM, it)
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            context.startActivity(Intent.createChooser(shareIntent, "Export GeoJSON"))
+                        }
+                    }
+                ) {
+                    Icon(Icons.Default.Share, contentDescription = "Export")
+                }
+
             }
 
             // Recenter GPS Button
