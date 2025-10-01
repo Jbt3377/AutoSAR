@@ -17,7 +17,7 @@ fun exportGeoJsonService(
     rangeRings: List<Double>?,
     centerPoint: Point?,
     subjectProfile: String? = null,
-    fileName: String,
+    fileName: String? = null,
 ): Uri? {
     val features = mutableListOf<Feature>()
 
@@ -42,7 +42,7 @@ fun exportGeoJsonService(
                 val circle = TurfTransformation.circle(
                     centerPoint,
                     radius,
-                    64, // number of steps (more = smoother circle)
+                    64,
                     TurfConstants.UNIT_METERS
                 )
 
@@ -61,9 +61,12 @@ fun exportGeoJsonService(
         }
     }
 
+    // Aggregate file values
     val featureCollection = FeatureCollection.fromFeatures(features)
+    val validFileName = validateFileName(fileName)
 
-    val file = File(context.cacheDir, "${fileName}.json")
+    // Write to file
+    val file = File(context.cacheDir, "${validFileName}.json")
     file.writeText(featureCollection.toJson())
 
     return FileProvider.getUriForFile(
@@ -71,4 +74,8 @@ fun exportGeoJsonService(
         "${context.packageName}.provider",
         file
     )
+}
+
+fun validateFileName(fileName: String?): String {
+    return if (fileName.isNullOrEmpty()) "autosar_export" else fileName
 }

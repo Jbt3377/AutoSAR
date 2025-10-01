@@ -120,7 +120,6 @@ fun MapboxMapScreen(
 
     // Manage Export
     var showExportDialog by remember { mutableStateOf(false) }
-    var exportFileName by remember { mutableStateOf("map_export") }
 
 
     val lpbRepository = remember { LPBRepository(context) }
@@ -217,8 +216,6 @@ fun MapboxMapScreen(
         if (showExportDialog) {
             ExportDialog(
                 context = context,
-                exportFileName = exportFileName,
-                onFileNameChange = { exportFileName = it },
                 markers = markers,
                 subjectProfile = subjectProfile,
                 lpbRepository = lpbRepository,
