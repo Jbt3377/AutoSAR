@@ -5,7 +5,10 @@ import android.net.Uri
 import androidx.core.content.FileProvider
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
+import com.mapbox.geojson.LineString
 import com.mapbox.geojson.Point
+import com.mapbox.turf.TurfConstants
+import com.mapbox.turf.TurfTransformation
 import java.io.File
 
 fun exportGeoJsonService(
@@ -17,39 +20,51 @@ fun exportGeoJsonService(
 ): Uri? {
     val features = mutableListOf<Feature>()
 
-    // Add markers
+    // Add markers as Caltopo-compatible points
     markers.forEachIndexed { index, point ->
-        features.add(
-            Feature.fromGeometry(point).apply {
-                addStringProperty("name", "Marker ${index + 1}")
-            }
-        )
+        val feature = Feature.fromGeometry(point).apply {
+            addStringProperty("title", if (index == 0) "IPP" else "Marker ${index + 1}")
+            addStringProperty("class", "Marker")
+            addStringProperty("marker-symbol", "point")
+            addStringProperty("marker-color", "FF0000")
+            addStringProperty("creator", "AutoSAR")
+            addNumberProperty("weight", 1)
+        }
+        features.add(feature)
     }
 
-    // Add range rings (as polygons)
+    // Add range rings as LineStrings (Caltopo-style circles)
     if (centerPoint != null && !rangeRings.isNullOrEmpty()) {
         rangeRings.forEachIndexed { index, radius ->
             if (radius > 0.0) {
-                val circle = com.mapbox.turf.TurfTransformation.circle(
-                    centerPoint, radius, 360, com.mapbox.turf.TurfConstants.UNIT_METERS
+                // Generate circle polygon using Turf
+                val circle = TurfTransformation.circle(
+                    centerPoint,
+                    radius,
+                    64, // number of steps (more = smoother circle)
+                    TurfConstants.UNIT_METERS
                 )
-                features.add(
-                    Feature.fromGeometry(circle).apply {
-                        addStringProperty("name", "Range Ring ${index + 1}")
-                    }
-                )
+
+                val lineString = LineString.fromLngLats(circle.coordinates()[0])
+
+                val feature = Feature.fromGeometry(lineString).apply {
+                    addStringProperty("title", "${radius.toInt()}m")
+                    addStringProperty("class", "Shape")
+                    addStringProperty("stroke", "#000000")
+                    addNumberProperty("stroke-opacity", 1)
+                    addNumberProperty("weight", 2)
+                    addStringProperty("creator", "AutoSAR")
+                }
+                features.add(feature)
             }
         }
     }
 
-    // Wrap as FeatureCollection
     val featureCollection = FeatureCollection.fromFeatures(features)
 
-    // Save to cache dir
-    val file = File(context.cacheDir, "map_export.geojson")
+    val file = File(context.cacheDir, "map_export.json")
     file.writeText(featureCollection.toJson())
 
-    // Return a shareable URI
     return FileProvider.getUriForFile(
         context,
         "${context.packageName}.provider",
