@@ -3,6 +3,7 @@ package com.example.autosar.services
 import android.content.Context
 import android.net.Uri
 import androidx.core.content.FileProvider
+import com.example.autosar.data.helpers.formatRangeRingLabel
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.LineString
@@ -47,9 +48,10 @@ fun exportGeoJsonService(
                 )
 
                 val lineString = LineString.fromLngLats(circle.coordinates()[0])
+                val annotation = formatRangeRingLabel(index, radius)
 
                 val feature = Feature.fromGeometry(lineString).apply {
-                    addStringProperty("title", "${radius.toInt()}m")
+                    addStringProperty("title", annotation)
                     addStringProperty("class", "Shape")
                     addStringProperty("stroke", "#000000")
                     addNumberProperty("stroke-opacity", 1)
