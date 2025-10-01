@@ -59,7 +59,7 @@ fun ExportDialog(
 
                     uri?.let {
                         val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                            type = "application/geo+json"
+                            type = "application/json"
                             putExtra(Intent.EXTRA_STREAM, it)
                             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         }
