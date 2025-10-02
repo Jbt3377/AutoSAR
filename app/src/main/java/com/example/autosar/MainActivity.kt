@@ -26,6 +26,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -36,6 +40,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,6 +63,7 @@ import com.mapbox.maps.Style
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.style.MapStyle
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -133,6 +139,10 @@ fun MapboxMapScreen(
     // Manage Export
     var showExportDialog by remember { mutableStateOf(false) }
 
+    // Manage GPS
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+
     val lpbRepository = remember { LPBRepository(context) }
 
     LaunchedEffect(userLocation) {
@@ -176,7 +186,8 @@ fun MapboxMapScreen(
                     containerColor = Color(0xFFFF751F)
                 )
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { padding ->
         Box(
             modifier = Modifier
@@ -227,6 +238,15 @@ fun MapboxMapScreen(
                                 mapViewportState.setCameraOptions {
                                     zoom(14.0)
                                     center(point)
+                                }
+
+                                // Show snackbar
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        message = "Camera moved to your location",
+                                        actionLabel = "Dismiss",
+                                        duration = SnackbarDuration.Short
+                                    )
                                 }
                             } ?: run {
                                 locationViewModel.fetchLastLocation(context as ComponentActivity)
