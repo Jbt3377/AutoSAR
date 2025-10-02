@@ -16,11 +16,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -30,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -95,6 +103,7 @@ fun AppContent(locationViewModel: LocationViewModel, markerViewModel: MarkerView
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("MissingPermission")
 @Composable
 fun MapboxMapScreen(
@@ -121,7 +130,6 @@ fun MapboxMapScreen(
     // Manage Export
     var showExportDialog by remember { mutableStateOf(false) }
 
-
     val lpbRepository = remember { LPBRepository(context) }
 
     LaunchedEffect(userLocation) {
@@ -133,96 +141,111 @@ fun MapboxMapScreen(
         }
     }
 
-    Box(Modifier.fillMaxSize()) {
-        MapboxMap(
-            modifier = Modifier.fillMaxSize(),
-            mapViewportState = mapViewportState,
-            style = { MapStyle(style = Style.OUTDOORS) },
-            onMapLongClickListener = { point ->
-                pendingPoint = point
-                showSubjectWizard = true
-                true
-            }
-        ) {
-            if (markers.isNotEmpty() && subjectProfile != null) {
-                val centerPoint = markers[0]
-
-                IPPMarker(centerPoint)
-
-                val lpbData = lpbRepository.getRingRadii(subjectProfile!!)
-                lpbData?.ringRadii?.let { RangeRings(it, centerPoint) }
-            }
-        }
-
-        // Action Buttons
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-
-            if(markers.isNotEmpty()){
-                FloatingActionButton(
-                    onClick = { markerViewModel.clearAllMarkers() },
-                ) {
-                    Icon(Icons.Filled.Clear, "Clear map")
-                }
-
-                FloatingActionButton(
-                    onClick = { showExportDialog = true }
-                ) {
-                    Icon(Icons.Default.FileDownload, contentDescription = "Export")
-                }
-
-
-            }
-
-            // Recenter GPS Button
-            if (hasPermission) {
-                FloatingActionButton(
-                    onClick = {
-                        userLocation?.let { point ->
-                            mapViewportState.setCameraOptions {
-                                zoom(14.0)
-                                center(point)
-                            }
-                        } ?: run {
-                            locationViewModel.fetchLastLocation(context as ComponentActivity)
-                        }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("AutoSAR", color = Color.White) },
+                navigationIcon = {
+                    IconButton(onClick = { /* TODO: Open drawer */ }) {
+                        Icon(
+                            imageVector = Icons.Default.Menu,
+                            contentDescription = "Menu",
+                            tint = Color.White
+                        )
                     }
-                ) {
-                    Icon(Icons.Filled.Place, "Recenter on my location")
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFFFF751F)
+                )
+            )
+        }
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = padding.calculateTopPadding()) // Only respect top padding
+        ) {
+            MapboxMap(
+                modifier = Modifier.fillMaxSize(),
+                mapViewportState = mapViewportState,
+                style = { MapStyle(style = Style.OUTDOORS) },
+                onMapLongClickListener = { point ->
+                    pendingPoint = point
+                    showSubjectWizard = true
+                    true
+                }
+            ) {
+                if (markers.isNotEmpty() && subjectProfile != null) {
+                    val centerPoint = markers[0]
+
+                    IPPMarker(centerPoint)
+
+                    val lpbData = lpbRepository.getRingRadii(subjectProfile!!)
+                    lpbData?.ringRadii?.let { RangeRings(it, centerPoint) }
                 }
             }
-        }
 
-        Crosshair(modifier = Modifier.align(Alignment.Center))
+            // Action Buttons
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (markers.isNotEmpty()) {
+                    FloatingActionButton(onClick = { markerViewModel.clearAllMarkers() }) {
+                        Icon(Icons.Filled.Clear, "Clear map")
+                    }
 
-        if (showSubjectWizard && pendingPoint != null) {
-            SubjectWizard(
-                pendingPoint = pendingPoint!!,
-                repository = lpbRepository,
-                onDismiss = { showSubjectWizard = false },
-                onConfirm = { point, profile ->
-                    markerViewModel.addMarker(point)
-                    subjectProfile = profile
-                    showSubjectWizard = false
-                    pendingPoint = null
+                    FloatingActionButton(onClick = { showExportDialog = true }) {
+                        Icon(Icons.Default.FileDownload, contentDescription = "Export")
+                    }
                 }
-            )
-        }
 
-        if (showExportDialog) {
-            ExportDialog(
-                context = context,
-                markers = markers,
-                subjectProfile = subjectProfile,
-                lpbRepository = lpbRepository,
-                onDismiss = { showExportDialog = false },
-                onExported = { showExportDialog = false }
-            )
+                if (hasPermission) {
+                    FloatingActionButton(
+                        onClick = {
+                            userLocation?.let { point ->
+                                mapViewportState.setCameraOptions {
+                                    zoom(14.0)
+                                    center(point)
+                                }
+                            } ?: run {
+                                locationViewModel.fetchLastLocation(context as ComponentActivity)
+                            }
+                        }
+                    ) {
+                        Icon(Icons.Filled.Place, "Recenter on my location")
+                    }
+                }
+            }
+
+            Crosshair(modifier = Modifier.align(Alignment.Center))
+
+            if (showSubjectWizard && pendingPoint != null) {
+                SubjectWizard(
+                    pendingPoint = pendingPoint!!,
+                    repository = lpbRepository,
+                    onDismiss = { showSubjectWizard = false },
+                    onConfirm = { point, profile ->
+                        markerViewModel.addMarker(point)
+                        subjectProfile = profile
+                        showSubjectWizard = false
+                        pendingPoint = null
+                    }
+                )
+            }
+
+            if (showExportDialog) {
+                ExportDialog(
+                    context = context,
+                    markers = markers,
+                    subjectProfile = subjectProfile,
+                    lpbRepository = lpbRepository,
+                    onDismiss = { showExportDialog = false },
+                    onExported = { showExportDialog = false }
+                )
+            }
         }
     }
 }
-
