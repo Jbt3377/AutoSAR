@@ -16,10 +16,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.LocationSearching
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Polyline
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -135,6 +139,9 @@ fun MapboxMapScreen(
     var pendingPoint by remember { mutableStateOf<Point?>(null) }
     var subjectProfile by remember { mutableStateOf<SubjectProfile?>(null) }
 
+    // Manage Sectoring
+    var isSectoring by remember { mutableStateOf(false) }
+
     // Manage Export
     var showExportDialog by remember { mutableStateOf(false) }
 
@@ -225,6 +232,10 @@ fun MapboxMapScreen(
                         Icon(Icons.Filled.Clear, "Clear map")
                     }
 
+                    FloatingActionButton(onClick = { isSectoring = true }) {
+                        Icon(Icons.Default.AutoAwesome, "Sector Hub")
+                    }
+
                     FloatingActionButton(onClick = { showExportDialog = true }) {
                         Icon(Icons.Default.FileDownload, contentDescription = "Export")
                     }
@@ -252,7 +263,7 @@ fun MapboxMapScreen(
                             }
                         }
                     ) {
-                        Icon(Icons.Filled.Place, "Recenter on my location")
+                        Icon(Icons.Filled.MyLocation, "Recenter on my location")
                     }
                 }
             }
