@@ -216,19 +216,21 @@ fun MapboxMapScreen(
                     val lpbData = lpbRepository.getRingRadii(subjectProfile!!)
                     lpbData?.ringRadii?.let { RangeRings(it, centerPoint) }
 
-                    val size = 0.5
-                    PolygonAnnotation(
-                        points = listOf(
-                            listOf(
-                                Point.fromLngLat(centerPoint.longitude() - size, centerPoint.latitude() + size),
-                                Point.fromLngLat(centerPoint.longitude() + size, centerPoint.latitude() + size),
-                                Point.fromLngLat(centerPoint.longitude() + size, centerPoint.latitude() - size),
-                                Point.fromLngLat(centerPoint.longitude() - size, centerPoint.latitude() - size),
-                                Point.fromLngLat(centerPoint.longitude() - size, centerPoint.latitude() + size)
+                    if(isSectoring) {
+                        val size = 0.01
+                        PolygonAnnotation(
+                            points = listOf(
+                                listOf(
+                                    Point.fromLngLat(centerPoint.longitude() - size, centerPoint.latitude() + size),
+                                    Point.fromLngLat(centerPoint.longitude() + size, centerPoint.latitude() + size),
+                                    Point.fromLngLat(centerPoint.longitude() + size, centerPoint.latitude() - size),
+                                    Point.fromLngLat(centerPoint.longitude() - size, centerPoint.latitude() - size),
+                                    Point.fromLngLat(centerPoint.longitude() - size, centerPoint.latitude() + size)
+                                )
                             )
-                        )
-                    ) {
-                        fillColor = Color.Red.copy(alpha = 0.5f)
+                        ) {
+                            fillColor = Color.Red.copy(alpha = 0.5f)
+                        }
                     }
                 }
             }
