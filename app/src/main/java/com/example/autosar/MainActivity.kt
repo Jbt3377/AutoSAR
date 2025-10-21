@@ -19,11 +19,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.LocationSearching
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MyLocation
-import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Polyline
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -65,6 +62,7 @@ import com.mapbox.geojson.Point
 import com.mapbox.maps.Style
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
+import com.mapbox.maps.extension.compose.annotation.generated.PolygonAnnotation
 import com.mapbox.maps.extension.compose.style.MapStyle
 import kotlinx.coroutines.launch
 
@@ -210,6 +208,20 @@ fun MapboxMapScreen(
                     true
                 }
             ) {
+                PolygonAnnotation(
+                    points = listOf(
+                        listOf(
+                            Point.fromLngLat(-90.0, 40.0),
+                            Point.fromLngLat(-85.0, 40.0),
+                            Point.fromLngLat(-85.0, 35.0),
+                            Point.fromLngLat(-90.0, 35.0),
+                            Point.fromLngLat(-90.0, 40.0)
+                        )
+                    )
+                ) {
+                    fillColor = Color.Red.copy(alpha = 0.5f)
+                }
+
                 if (markers.isNotEmpty() && subjectProfile != null) {
                     val centerPoint = markers[0]
 
