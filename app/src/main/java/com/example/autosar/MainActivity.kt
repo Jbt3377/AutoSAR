@@ -208,20 +208,6 @@ fun MapboxMapScreen(
                     true
                 }
             ) {
-                PolygonAnnotation(
-                    points = listOf(
-                        listOf(
-                            Point.fromLngLat(-90.0, 40.0),
-                            Point.fromLngLat(-85.0, 40.0),
-                            Point.fromLngLat(-85.0, 35.0),
-                            Point.fromLngLat(-90.0, 35.0),
-                            Point.fromLngLat(-90.0, 40.0)
-                        )
-                    )
-                ) {
-                    fillColor = Color.Red.copy(alpha = 0.5f)
-                }
-
                 if (markers.isNotEmpty() && subjectProfile != null) {
                     val centerPoint = markers[0]
 
@@ -229,6 +215,21 @@ fun MapboxMapScreen(
 
                     val lpbData = lpbRepository.getRingRadii(subjectProfile!!)
                     lpbData?.ringRadii?.let { RangeRings(it, centerPoint) }
+
+                    val size = 0.5
+                    PolygonAnnotation(
+                        points = listOf(
+                            listOf(
+                                Point.fromLngLat(centerPoint.longitude() - size, centerPoint.latitude() + size),
+                                Point.fromLngLat(centerPoint.longitude() + size, centerPoint.latitude() + size),
+                                Point.fromLngLat(centerPoint.longitude() + size, centerPoint.latitude() - size),
+                                Point.fromLngLat(centerPoint.longitude() - size, centerPoint.latitude() - size),
+                                Point.fromLngLat(centerPoint.longitude() - size, centerPoint.latitude() + size)
+                            )
+                        )
+                    ) {
+                        fillColor = Color.Red.copy(alpha = 0.5f)
+                    }
                 }
             }
 
