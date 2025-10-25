@@ -13,7 +13,7 @@ class SectoringService {
     val sectors = _sectors.asStateFlow()
 
     fun sectorHub(centerPoint: Point) {
-        val size = 0.01
+        val size = 0.001
         val points = listOf(
             listOf(
                 Point.fromLngLat(centerPoint.longitude() - size, centerPoint.latitude() + size),

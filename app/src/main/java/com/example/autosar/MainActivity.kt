@@ -206,7 +206,7 @@ fun MapboxMapScreen(
             MapboxMap(
                 modifier = Modifier.fillMaxSize(),
                 mapViewportState = mapViewportState,
-                style = { MapStyle(style = Style.OUTDOORS) },
+                style = { MapStyle(style = Style.SATELLITE) },
                 onMapLongClickListener = { point ->
                     pendingPoint = point
                     showSubjectWizard = true
