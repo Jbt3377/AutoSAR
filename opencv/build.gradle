@@ -113,6 +113,12 @@ android {
         pickFirst 'lib/arm64-v8a/libc++_shared.so'
     }
 
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
+
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 34

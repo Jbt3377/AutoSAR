@@ -8,6 +8,12 @@ android {
     namespace = "com.example.autosar"
     compileSdk = 36
 
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
+
     defaultConfig {
         applicationId = "com.example.autosar"
         minSdk = 24
