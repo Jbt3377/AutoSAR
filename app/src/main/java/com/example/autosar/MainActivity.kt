@@ -16,10 +16,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -57,10 +58,12 @@ import com.example.autosar.data.dtos.SubjectProfile
 import com.example.autosar.data.repositories.LPBRepository
 import com.example.autosar.models.LocationViewModel
 import com.example.autosar.models.MarkerViewModel
+import com.example.autosar.services.SectoringService
 import com.mapbox.geojson.Point
 import com.mapbox.maps.Style
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
+import com.mapbox.maps.extension.compose.annotation.generated.PolygonAnnotation
 import com.mapbox.maps.extension.compose.style.MapStyle
 import kotlinx.coroutines.launch
 
@@ -68,6 +71,8 @@ class MainActivity : ComponentActivity() {
 
     private val locationViewModel: LocationViewModel by viewModels()
     private val markerViewModel: MarkerViewModel by viewModels()
+
+    private val sectoringService = SectoringService()
 
     @SuppressLint("MissingPermission")
     private val requestPermissionLauncher =
@@ -94,19 +99,19 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            AppContent(locationViewModel, markerViewModel)
+            AppContent(locationViewModel, markerViewModel, sectoringService)
         }
     }
 }
 
 @Composable
-fun AppContent(locationViewModel: LocationViewModel, markerViewModel: MarkerViewModel) {
+fun AppContent(locationViewModel: LocationViewModel, markerViewModel: MarkerViewModel, sectoringService: SectoringService) {
     MaterialTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            MapboxMapScreen(locationViewModel, markerViewModel)
+            MapboxMapScreen(locationViewModel, markerViewModel, sectoringService)
         }
     }
 }
@@ -116,7 +121,8 @@ fun AppContent(locationViewModel: LocationViewModel, markerViewModel: MarkerView
 @Composable
 fun MapboxMapScreen(
     locationViewModel: LocationViewModel,
-    markerViewModel: MarkerViewModel
+    markerViewModel: MarkerViewModel,
+    sectoringService: SectoringService
 ) {
     val context = LocalContext.current
     val mapViewportState = rememberMapViewportState {
@@ -129,11 +135,15 @@ fun MapboxMapScreen(
     val userLocation by locationViewModel.userLocation.collectAsState()
     val hasPermission by locationViewModel.hasPermission.collectAsState()
     val markers by markerViewModel.markers.collectAsState()
+    val sectors by sectoringService.sectors.collectAsState()
 
     // Manage Map Features
     var showSubjectWizard by remember { mutableStateOf(false) }
     var pendingPoint by remember { mutableStateOf<Point?>(null) }
     var subjectProfile by remember { mutableStateOf<SubjectProfile?>(null) }
+
+    // Manage Sectoring
+    var isSectoring by remember { mutableStateOf(false) }
 
     // Manage Export
     var showExportDialog by remember { mutableStateOf(false) }
@@ -196,7 +206,7 @@ fun MapboxMapScreen(
             MapboxMap(
                 modifier = Modifier.fillMaxSize(),
                 mapViewportState = mapViewportState,
-                style = { MapStyle(style = Style.OUTDOORS) },
+                style = { MapStyle(style = Style.SATELLITE) },
                 onMapLongClickListener = { point ->
                     pendingPoint = point
                     showSubjectWizard = true
@@ -211,6 +221,14 @@ fun MapboxMapScreen(
                     val lpbData = lpbRepository.getRingRadii(subjectProfile!!)
                     lpbData?.ringRadii?.let { RangeRings(it, centerPoint) }
                 }
+
+                sectors.forEach { polygon ->
+                    PolygonAnnotation(
+                        points = polygon.coordinates()
+                    ) {
+                        fillColor = Color.Red.copy(alpha = 0.5f)
+                    }
+                }
             }
 
             // Action Buttons
@@ -221,8 +239,20 @@ fun MapboxMapScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 if (markers.isNotEmpty()) {
-                    FloatingActionButton(onClick = { markerViewModel.clearAllMarkers() }) {
+                    FloatingActionButton(onClick = {
+                        markerViewModel.clearAllMarkers()
+                        sectoringService.clearSectors()
+                    }) {
                         Icon(Icons.Filled.Clear, "Clear map")
+                    }
+
+                    FloatingActionButton(onClick = {
+                        val centerPoint = markers.firstOrNull()
+                        centerPoint?.let {
+                            sectoringService.sectorHub(it)
+                        }
+                    }) {
+                        Icon(Icons.Default.AutoAwesome, "Sector Hub")
                     }
 
                     FloatingActionButton(onClick = { showExportDialog = true }) {
@@ -252,7 +282,7 @@ fun MapboxMapScreen(
                             }
                         }
                     ) {
-                        Icon(Icons.Filled.Place, "Recenter on my location")
+                        Icon(Icons.Filled.MyLocation, "Recenter on my location")
                     }
                 }
             }
