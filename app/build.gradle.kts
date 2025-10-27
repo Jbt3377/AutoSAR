@@ -48,11 +48,11 @@ android {
         jniLibs {
             // Exclude the libc++_shared.so library from all dependencies,
             // as your local opencv module is likely providing it.
-            excludes.add("lib/arm64-v8a/libc++_shared.so")
+            pickFirsts.add("lib/arm64-v8a/libc++_shared.so")
             // Add excludes for other architectures as well to be safe
-            excludes.add("lib/armeabi-v7a/libc++_shared.so")
-            excludes.add("lib/x86/libc++_shared.so")
-            excludes.add("lib/x86_64/libc++_shared.so")
+            pickFirsts.add("lib/armeabi-v7a/libc++_shared.so")
+            pickFirsts.add("lib/x86/libc++_shared.so")
+            pickFirsts.add("lib/x86_64/libc++_shared.so")
         }
     }
 }
