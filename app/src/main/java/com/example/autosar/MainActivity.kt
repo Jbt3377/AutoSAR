@@ -66,6 +66,7 @@ import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportS
 import com.mapbox.maps.extension.compose.annotation.generated.PolygonAnnotation
 import com.mapbox.maps.extension.compose.style.MapStyle
 import kotlinx.coroutines.launch
+import org.opencv.android.OpenCVLoader
 
 class MainActivity : ComponentActivity() {
 

@@ -25,3 +25,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "AutoSAR"
 include(":app")
+include(":opencv")
