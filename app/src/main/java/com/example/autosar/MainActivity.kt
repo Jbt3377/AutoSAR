@@ -99,6 +99,12 @@ class MainActivity : ComponentActivity() {
             locationViewModel.fetchLastLocation(this)
         }
 
+        if(OpenCVLoader.initLocal()){
+            println("OpenCV loaded successfully")
+        } else {
+            println("OpenCV failed to load")
+        }
+
         setContent {
             AppContent(locationViewModel, markerViewModel, sectoringService)
         }
