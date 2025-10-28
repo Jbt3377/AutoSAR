@@ -72,8 +72,7 @@ class MainActivity : ComponentActivity() {
 
     private val locationViewModel: LocationViewModel by viewModels()
     private val markerViewModel: MarkerViewModel by viewModels()
-
-    private val sectoringService = SectoringService()
+    private val sectoringService by lazy { SectoringService(this) }
 
     @SuppressLint("MissingPermission")
     private val requestPermissionLauncher =
@@ -256,7 +255,7 @@ fun MapboxMapScreen(
                     FloatingActionButton(onClick = {
                         val centerPoint = markers.firstOrNull()
                         centerPoint?.let {
-                            sectoringService.sectorHub(it)
+                            sectoringService.sectorHubWithImagery(it)
                         }
                     }) {
                         Icon(Icons.Default.AutoAwesome, "Sector Hub")
