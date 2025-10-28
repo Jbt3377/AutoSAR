@@ -32,7 +32,7 @@ object ImageSegmentationUtil {
         Imgproc.resize(src, resized, Size(src.width() * scale, src.height() * scale))
 
         // Prepare for K-means
-        val samples = resized.reshape(1, resized.cols() * resized.rows())
+        val samples = resized.reshape(3, resized.cols() * resized.rows()) // ← use 3 channels!
         samples.convertTo(samples, CvType.CV_32F)
 
         // Run K-means clustering
@@ -43,22 +43,27 @@ object ImageSegmentationUtil {
 
         // Recolor the clustered image
         val clustered = Mat(resized.size(), resized.type())
-        val centersUchar = Mat()
-        centers.convertTo(centersUchar, CvType.CV_8UC3) // Explicitly set the type to 3-channel color
 
         var dataIndex = 0
         for (y in 0 until resized.rows()) {
             for (x in 0 until resized.cols()) {
                 val clusterIdx = labels.get(dataIndex, 0)[0].toInt()
-                // Get the color data as a DoubleArray
-                val colorData = centersUchar.get(clusterIdx, 0)
-                // Convert the DoubleArray to a ByteArray for the put method, avoiding the deprecated toByte() call
-                val colorByteArray = byteArrayOf(
-                    colorData[0].toInt().toByte(),
-                    colorData[1].toInt().toByte(),
-                    colorData[2].toInt().toByte()
-                )
-                clustered.put(y, x, colorByteArray)
+
+                // Each center row has 3 values: B, G, R
+                val colorData = centers.get(clusterIdx, 0)
+
+                if (colorData != null && colorData.size >= 3) {
+                    clustered.put(
+                        y,
+                        x,
+                        byteArrayOf(
+                            colorData[0].toInt().toByte(),
+                            colorData[1].toInt().toByte(),
+                            colorData[2].toInt().toByte()
+                        )
+                    )
+                }
+
                 dataIndex++
             }
         }
