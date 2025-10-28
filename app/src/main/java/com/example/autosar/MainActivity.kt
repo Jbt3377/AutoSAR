@@ -66,13 +66,13 @@ import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportS
 import com.mapbox.maps.extension.compose.annotation.generated.PolygonAnnotation
 import com.mapbox.maps.extension.compose.style.MapStyle
 import kotlinx.coroutines.launch
+import org.opencv.android.OpenCVLoader
 
 class MainActivity : ComponentActivity() {
 
     private val locationViewModel: LocationViewModel by viewModels()
     private val markerViewModel: MarkerViewModel by viewModels()
-
-    private val sectoringService = SectoringService()
+    private val sectoringService by lazy { SectoringService(this) }
 
     @SuppressLint("MissingPermission")
     private val requestPermissionLauncher =
@@ -96,6 +96,12 @@ class MainActivity : ComponentActivity() {
             requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         } else {
             locationViewModel.fetchLastLocation(this)
+        }
+
+        if(OpenCVLoader.initLocal()){
+            println("OpenCV loaded successfully")
+        } else {
+            println("OpenCV failed to load")
         }
 
         setContent {
@@ -249,7 +255,7 @@ fun MapboxMapScreen(
                     FloatingActionButton(onClick = {
                         val centerPoint = markers.firstOrNull()
                         centerPoint?.let {
-                            sectoringService.sectorHub(it)
+                            sectoringService.sectorHubWithImagery(it)
                         }
                     }) {
                         Icon(Icons.Default.AutoAwesome, "Sector Hub")

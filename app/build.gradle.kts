@@ -8,6 +8,12 @@ android {
     namespace = "com.example.autosar"
     compileSdk = 36
 
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
+
     defaultConfig {
         applicationId = "com.example.autosar"
         minSdk = 24
@@ -28,14 +34,26 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17 // Upgraded from 11
+        targetCompatibility = JavaVersion.VERSION_17 // Upgraded from 11
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
+    }
+
+    packagingOptions {
+        jniLibs {
+            // Exclude the libc++_shared.so library from all dependencies,
+            // as your local opencv module is likely providing it.
+            pickFirsts.add("lib/arm64-v8a/libc++_shared.so")
+            // Add excludes for other architectures as well to be safe
+            pickFirsts.add("lib/armeabi-v7a/libc++_shared.so")
+            pickFirsts.add("lib/x86/libc++_shared.so")
+            pickFirsts.add("lib/x86_64/libc++_shared.so")
+        }
     }
 }
 
@@ -63,4 +81,6 @@ dependencies {
     implementation("com.mapbox.mapboxsdk:mapbox-sdk-turf:6.14.0")
     implementation("androidx.compose.material:material-icons-extended:<latest_version>")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+
+    implementation(project(":opencv"))
 }
