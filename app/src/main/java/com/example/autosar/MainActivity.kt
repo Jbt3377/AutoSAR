@@ -45,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -60,6 +61,7 @@ import com.example.autosar.models.LocationViewModel
 import com.example.autosar.models.MarkerViewModel
 import com.example.autosar.services.SectoringService
 import com.mapbox.geojson.Point
+import com.mapbox.geojson.Polygon
 import com.mapbox.maps.Style
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
@@ -219,22 +221,12 @@ fun MapboxMapScreen(
                     true
                 }
             ) {
-                if (markers.isNotEmpty() && subjectProfile != null) {
-                    val centerPoint = markers[0]
-
-                    IPPMarker(centerPoint)
-
-                    val lpbData = lpbRepository.getRingRadii(subjectProfile!!)
-                    lpbData?.ringRadii?.let { RangeRings(it, centerPoint) }
-                }
-
-                sectors.forEach { polygon ->
-                    PolygonAnnotation(
-                        points = polygon.coordinates()
-                    ) {
-                        fillColor = Color.Red.copy(alpha = 0.5f)
-                    }
-                }
+                DrawMapFeatures(
+                    markers = markers,
+                    subjectProfile = subjectProfile,
+                    lpbRepository = lpbRepository,
+                    sectors = sectors
+                )
             }
 
             // Action Buttons
@@ -319,6 +311,31 @@ fun MapboxMapScreen(
                     onExported = { showExportDialog = false }
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun DrawMapFeatures(
+    markers: List<Point>,
+    subjectProfile: SubjectProfile?,
+    lpbRepository: LPBRepository,
+    sectors: List<Polygon>
+) {
+    if (markers.isNotEmpty() && subjectProfile != null) {
+        val centerPoint = markers[0]
+
+        IPPMarker(centerPoint)
+
+        val lpbData = lpbRepository.getRingRadii(subjectProfile)
+        lpbData?.ringRadii?.let { RangeRings(it, centerPoint) }
+    }
+
+    sectors.forEach { polygon ->
+        PolygonAnnotation(
+            points = polygon.coordinates()
+        ) {
+            fillColor = Color.Red.copy(alpha = 0.5f)
         }
     }
 }

@@ -14,6 +14,11 @@ class SectoringService(private val context: Context) {
     private val _sectors = MutableStateFlow<List<Polygon>>(emptyList())
     val sectors = _sectors.asStateFlow()
 
+    /**
+     * Deprecating example method of adding 1 polygon to map
+     *
+     * @param centerPoint IPP Marker
+     */
     fun sectorHub(centerPoint: Point) {
         val size = 0.001
         val points = listOf(
@@ -29,15 +34,27 @@ class SectoringService(private val context: Context) {
         _sectors.value = _sectors.value + polygon
     }
 
+    /**
+     * Method sectors hub around the provided point
+     *
+     * @param centerPoint IPP Marker
+     */
     fun sectorHubWithImagery(centerPoint: Point) {
+
+        // Get satellite image of IPP Point
         GetSatelliteImageUtil.captureSatelliteTile(
-            context = context, // Now using the context from the constructor
+            context = context,
             center = centerPoint,
             zoom = 16.5
         ) { bitmap ->
             if (bitmap != null) {
 
+                // Extract polygons from satellite image
                 val polygons = ImageSegmentationUtil.extractPolygonsFromImage(bitmap)
+
+                // TODO: Convert polygons to points
+
+                // TODO: Return points to
 
                 Log.d("Segmentation", "Extracted and added ${polygons.size} polygons")
             } else {
