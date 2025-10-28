@@ -1,3 +1,0 @@
--- Configuring done
--- Generating done
--- Build files have been written to: C:/Users/BEATT/AndroidStudioProjects/AutoSAR/opencv/.cxx/Debug/4a2h4866/x86
