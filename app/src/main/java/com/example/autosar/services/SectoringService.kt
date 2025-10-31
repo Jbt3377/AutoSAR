@@ -50,11 +50,32 @@ class SectoringService(private val context: Context) {
             if (bitmap != null) {
 
                 // Extract polygons from satellite image
-                val polygons = ImageSegmentationUtil.extractPolygonsFromImage(bitmap)
+                val polygons = ImageSegmentationUtil.extractPolygonsFromImage(
+                    bitmap = bitmap,
+                    center = centerPoint,
+                    zoom = 16.5
+                )
 
-                // TODO: Convert polygons to points
+                Log.d("Polygons", "Polygon information: $polygons")
 
-                // TODO: Return points to
+                // Draw polygons
+                for(polygon in polygons){
+                    val polygonConverted = Polygon.fromLngLats(listOf(polygon))
+                    _sectors.value = _sectors.value + polygonConverted
+                }
+
+                val size = 0.001
+                val test = listOf(
+                    listOf(
+                        Point.fromLngLat(centerPoint.longitude() - size, centerPoint.latitude() + size),
+                        Point.fromLngLat(centerPoint.longitude() + size, centerPoint.latitude() + size),
+                        Point.fromLngLat(centerPoint.longitude() + size, centerPoint.latitude() - size),
+                        Point.fromLngLat(centerPoint.longitude() - size, centerPoint.latitude() - size),
+                        Point.fromLngLat(centerPoint.longitude() - size, centerPoint.latitude() + size)
+                    )
+                )
+
+                Log.d("Polygons Test", "Polygon information: $test")
 
                 Log.d("Segmentation", "Extracted and added ${polygons.size} polygons")
             } else {

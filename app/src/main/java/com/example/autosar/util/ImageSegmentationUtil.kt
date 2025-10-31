@@ -1,106 +1,120 @@
 package com.example.autosar.util
 
 import android.graphics.Bitmap
+import com.mapbox.geojson.Point
 import org.opencv.android.Utils
-import org.opencv.core.Core
-import org.opencv.core.CvType
 import org.opencv.core.Mat
 import org.opencv.core.MatOfPoint
 import org.opencv.core.MatOfPoint2f
-import org.opencv.core.Point
-import org.opencv.core.Size
-import org.opencv.core.TermCriteria
 import org.opencv.imgproc.Imgproc
-import kotlin.math.abs
 
 object ImageSegmentationUtil {
 
     /**
-     * Segments a satellite image into color regions and extracts polygons.
-     * @param bitmap The input satellite tile bitmap.
-     * @param clusterCount Number of color clusters (e.g., 5–8).
-     * @return List of polygons (each polygon is a list of LatLng-like points in image coordinates).
+     * Extracts polygons from a given bitmap image using OpenCV.
+     *
+     * @param bitmap The input bitmap image.
+     * @param center The geographic center point of the bitmap image.
+     * @param zoom The map zoom level at which the bitmap was captured.
+     * @return A list of polygons, where each polygon is represented by a list of GeoJSON Points.
      */
-    fun extractPolygonsFromImage(bitmap: Bitmap, clusterCount: Int = 6): List<List<Point>> {
-        val src = Mat()
-        Utils.bitmapToMat(bitmap, src)
-        Imgproc.cvtColor(src, src, Imgproc.COLOR_RGBA2RGB)
+    fun extractPolygonsFromImage(
+        bitmap: Bitmap,
+        center: Point,
+        zoom: Double
+    ): List<List<Point>> {
+        // Convert Bitmap to Mat
+        val mat = Mat()
+        Utils.bitmapToMat(bitmap, mat)
 
-        // Resize for performance
-        val scale = 0.5
-        val resized = Mat()
-        Imgproc.resize(src, resized, Size(src.width() * scale, src.height() * scale))
+        // Convert to grayscale
+        val grayMat = Mat()
+        Imgproc.cvtColor(mat, grayMat, Imgproc.COLOR_BGR2GRAY)
 
-        // Prepare for K-means
-        val samples = resized.reshape(3, resized.cols() * resized.rows()) // ← use 3 channels!
-        samples.convertTo(samples, CvType.CV_32F)
+        // Apply thresholding to get a binary image
+        val threshMat = Mat()
+        Imgproc.threshold(grayMat, threshMat, 128.0, 255.0, Imgproc.THRESH_BINARY)
 
-        // Run K-means clustering
-        val criteria = TermCriteria(TermCriteria.EPS + TermCriteria.MAX_ITER, 10, 1.0)
-        val labels = Mat()
-        val centers = Mat()
-        Core.kmeans(samples, clusterCount, labels, criteria, 3, Core.KMEANS_PP_CENTERS, centers)
-
-        // Recolor the clustered image
-        val clustered = Mat(resized.size(), resized.type())
-
-        var dataIndex = 0
-        for (y in 0 until resized.rows()) {
-            for (x in 0 until resized.cols()) {
-                val clusterIdx = labels.get(dataIndex, 0)[0].toInt()
-
-                // Each center row has 3 values: B, G, R
-                val colorData = centers.get(clusterIdx, 0)
-
-                if (colorData != null && colorData.size >= 3) {
-                    clustered.put(
-                        y,
-                        x,
-                        byteArrayOf(
-                            colorData[0].toInt().toByte(),
-                            colorData[1].toInt().toByte(),
-                            colorData[2].toInt().toByte()
-                        )
-                    )
-                }
-
-                dataIndex++
-            }
-        }
-
-        // Convert to grayscale and threshold
-        val gray = Mat()
-        Imgproc.cvtColor(clustered, gray, Imgproc.COLOR_RGB2GRAY)
-        Imgproc.GaussianBlur(gray, gray, Size(5.0, 5.0), 0.0)
-        val thresh = Mat()
-        Imgproc.adaptiveThreshold(gray, thresh, 255.0, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
-            Imgproc.THRESH_BINARY, 11, 2.0)
-
-        // Find contours (polygons)
+        // Find contours
         val contours = mutableListOf<MatOfPoint>()
         val hierarchy = Mat()
-        Imgproc.findContours(thresh, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE)
+        Imgproc.findContours(
+            threshMat,
+            contours,
+            hierarchy,
+            Imgproc.RETR_EXTERNAL,
+            Imgproc.CHAIN_APPROX_SIMPLE
+        )
+
+        val allPolygons = mutableListOf<List<Point>>()
 
         // Approximate and simplify polygons
-        val polygons = mutableListOf<List<Point>>()
-        for (c in contours) {
-            val contour2f = MatOfPoint2f(*c.toArray())
-            val approx = MatOfPoint2f()
-            Imgproc.approxPolyDP(contour2f, approx, 4.0, true)
-            val area = abs(Imgproc.contourArea(approx))
-            if (area > 500.0) { // ignore small noise
-                polygons.add(approx.toArray().map {
-                    Point(it.x / scale, it.y / scale) // rescale to original size
-                })
+        for (contour in contours) {
+            val contour2f = MatOfPoint2f(*contour.toArray())
+            val approxCurve = MatOfPoint2f()
+            val epsilon = 0.01 * Imgproc.arcLength(contour2f, true)
+            Imgproc.approxPolyDP(contour2f, approxCurve, epsilon, true)
+
+            // Filter out small or insignificant polygons
+            if (Imgproc.contourArea(approxCurve) > 100) {
+                val approxPoints = approxCurve.toList()
+                if (approxPoints.size >= 3) {
+                    val geoJsonPoints = convertPixelToGeo(
+                        pixels = approxPoints,
+                        center = center,
+                        zoom = zoom,
+                        tileWidth = bitmap.width,
+                        tileHeight = bitmap.height
+                    )
+                    allPolygons.add(geoJsonPoints)
+                }
             }
         }
+        return allPolygons
+    }
 
-        src.release()
-        resized.release()
-        clustered.release()
-        gray.release()
-        thresh.release()
+    /**
+     * Converts a list of pixel coordinates (from OpenCV) to geographic coordinates (Mapbox Points).
+     *
+     * @param pixels List of OpenCV points representing pixel coordinates.
+     * @param center The geographic center of the tile.
+     * @param zoom The zoom level of the tile.
+     * @param tileWidth The width of the tile in pixels.
+     * @param tileHeight The height of the tile in pixels.
+     * @return A list of Mapbox GeoJSON Points.
+     */
+    private fun convertPixelToGeo(
+        pixels: List<org.opencv.core.Point>,
+        center: Point,
+        zoom: Double,
+        tileWidth: Int,
+        tileHeight: Int
+    ): List<Point> {
+        val scale = Math.pow(2.0, zoom)
+        val centerPixelX = tileWidth / 2.0
+        val centerPixelY = tileHeight / 2.0
 
-        return polygons
+        // Convert center lat/lon to world coordinates
+        val centerLonRad = Math.toRadians(center.longitude())
+        val centerLatRad = Math.toRadians(center.latitude())
+        val worldCoordX = (center.longitude() + 180) / 360
+        val worldCoordY = (1 - Math.log(Math.tan(centerLatRad) + 1 / Math.cos(centerLatRad)) / Math.PI) / 2
+
+        return pixels.map { pixel ->
+            // Calculate the pixel's offset from the center of the tile
+            val pixelOffsetX = pixel.x - centerPixelX
+            val pixelOffsetY = pixel.y - centerPixelY
+
+            // Calculate the pixel's world coordinate
+            val pointWorldX = worldCoordX + pixelOffsetX / (tileWidth * scale)
+            val pointWorldY = worldCoordY + pixelOffsetY / (tileHeight * scale)
+
+            // Convert the world coordinate back to lat/lon
+            val lonDeg = pointWorldX * 360 - 180
+            val n = Math.PI - 2 * Math.PI * pointWorldY
+            val latDeg = Math.toDegrees(Math.atan(0.5 * (Math.exp(n) - Math.exp(-n))))
+
+            Point.fromLngLat(lonDeg, latDeg)
+        }
     }
 }
