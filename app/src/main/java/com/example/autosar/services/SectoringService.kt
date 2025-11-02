@@ -51,6 +51,7 @@ class SectoringService(private val context: Context) {
 
                 // Extract polygons from satellite image
                 val polygons = ImageSegmentationUtil.extractPolygonsFromImage(
+                    context,
                     bitmap = bitmap,
                     center = centerPoint,
                     zoom = 16.5

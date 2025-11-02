@@ -1,6 +1,8 @@
 package com.example.autosar.util
 
+import android.content.Context
 import android.graphics.Bitmap
+import androidx.compose.ui.geometry.Size
 import com.mapbox.geojson.Point
 import org.opencv.android.Utils
 import org.opencv.core.Mat
@@ -19,6 +21,7 @@ object ImageSegmentationUtil {
      * @return A list of polygons, where each polygon is represented by a list of GeoJSON Points.
      */
     fun extractPolygonsFromImage(
+        context: Context,
         bitmap: Bitmap,
         center: Point,
         zoom: Double
@@ -30,10 +33,17 @@ object ImageSegmentationUtil {
         // Convert to grayscale
         val grayMat = Mat()
         Imgproc.cvtColor(mat, grayMat, Imgproc.COLOR_BGR2GRAY)
+        SaveImageUtil.saveMatAsImage(context, grayMat, "01_grayscale")
+
+        // Apply Gaussian blur to reduce noise and smooth the image
+        val blurredMat = Mat()
+        Imgproc.GaussianBlur(grayMat, blurredMat, org.opencv.core.Size(5.0, 5.0), 0.0)
+        SaveImageUtil.saveMatAsImage(context, blurredMat, "02_gaussian_blur")
 
         // Apply thresholding to get a binary image
         val threshMat = Mat()
         Imgproc.threshold(grayMat, threshMat, 128.0, 255.0, Imgproc.THRESH_BINARY)
+        SaveImageUtil.saveMatAsImage(context, threshMat, "03_threshold")
 
         // Find contours
         val contours = mutableListOf<MatOfPoint>()
