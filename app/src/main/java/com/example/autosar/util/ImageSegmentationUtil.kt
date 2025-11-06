@@ -2,12 +2,12 @@ package com.example.autosar.util
 
 import android.content.Context
 import android.graphics.Bitmap
-import androidx.compose.ui.geometry.Size
 import com.mapbox.geojson.Point
 import org.opencv.android.Utils
 import org.opencv.core.Mat
 import org.opencv.core.MatOfPoint
 import org.opencv.core.MatOfPoint2f
+import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
 
 object ImageSegmentationUtil {
@@ -37,13 +37,27 @@ object ImageSegmentationUtil {
 
         // Apply Gaussian blur to reduce noise and smooth the image
         val blurredMat = Mat()
-        Imgproc.GaussianBlur(grayMat, blurredMat, org.opencv.core.Size(5.0, 5.0), 0.0)
+        Imgproc.GaussianBlur(grayMat, blurredMat, Size(15.0, 15.0), 5.0)
         SaveImageUtil.saveMatAsImage(context, blurredMat, "02_gaussian_blur")
 
         // Apply thresholding to get a binary image
         val threshMat = Mat()
-        Imgproc.threshold(grayMat, threshMat, 128.0, 255.0, Imgproc.THRESH_BINARY)
+        Imgproc.adaptiveThreshold(
+            blurredMat,
+            threshMat,
+            255.0,
+            Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
+            Imgproc.THRESH_BINARY,
+            35,
+            5.0
+        )
         SaveImageUtil.saveMatAsImage(context, threshMat, "03_threshold")
+
+        // Morphological smoothing
+        val kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, Size(7.0, 7.0))
+        Imgproc.morphologyEx(threshMat, threshMat, Imgproc.MORPH_CLOSE, kernel)
+        Imgproc.morphologyEx(threshMat, threshMat, Imgproc.MORPH_OPEN, kernel)
+        SaveImageUtil.saveMatAsImage(context, threshMat, "04_morph_cleaned")
 
         // Find contours
         val contours = mutableListOf<MatOfPoint>()
