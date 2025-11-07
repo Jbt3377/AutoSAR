@@ -9,6 +9,9 @@ import org.opencv.core.MatOfPoint
 import org.opencv.core.MatOfPoint2f
 import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
+import org.opencv.core.TermCriteria
+import org.opencv.core.Core
+import org.opencv.core.CvType
 
 object ImageSegmentationUtil {
 
@@ -21,6 +24,20 @@ object ImageSegmentationUtil {
      * @return A list of polygons, where each polygon is represented by a list of GeoJSON Points.
      */
     fun extractPolygonsFromImage(
+        context: Context,
+        bitmap: Bitmap,
+        center: Point,
+        zoom: Double
+    ): List<List<Point>> {
+        return extractPolygonsFromImageApproach1(
+            context = context,
+            bitmap = bitmap,
+            center = center,
+            zoom = zoom
+        )
+    }
+
+    fun extractPolygonsFromImageApproach1(
         context: Context,
         bitmap: Bitmap,
         center: Point,
@@ -94,6 +111,122 @@ object ImageSegmentationUtil {
                 }
             }
         }
+        return allPolygons
+    }
+
+    fun extractPolygonsFromImageApproach2(
+        context: Context,
+        bitmap: Bitmap,
+        center: Point,
+        zoom: Double
+    ): List<List<Point>> {
+        // Convert Bitmap to Mat
+        val mat = Mat()
+        Utils.bitmapToMat(bitmap, mat)
+
+        // Convert to LAB color space (helps separate color differences like vegetation/soil)
+        val labMat = Mat()
+        Imgproc.cvtColor(mat, labMat, Imgproc.COLOR_BGR2Lab)
+        SaveImageUtil.saveMatAsImage(context, labMat, "01_lab")
+
+        // Apply CLAHE (enhance contrast in L-channel)
+        val labChannels = mutableListOf<Mat>()
+        Core.split(labMat, labChannels)
+        val clahe = Imgproc.createCLAHE(2.0, Size(8.0, 8.0))
+        clahe.apply(labChannels[0], labChannels[0])
+        Core.merge(labChannels, labMat)
+        SaveImageUtil.saveMatAsImage(context, labMat, "02_clahe_lab")
+
+        // Flatten image for clustering (K-Means expects Nx3 float data)
+        val samples = labMat.reshape(1, labMat.rows() * labMat.cols())
+        samples.convertTo(samples, CvType.CV_32F)
+
+        // Run K-Means clustering
+        val k = 4
+        val criteria = TermCriteria(TermCriteria.EPS + TermCriteria.MAX_ITER, 15, 1.0)
+        val labels = Mat()
+        val centers = Mat()
+        Core.kmeans(samples, k, labels, criteria, 3, Core.KMEANS_PP_CENTERS, centers)
+
+        // Ensure centers are float so Mat.get() works
+        centers.convertTo(centers, CvType.CV_32F)
+
+        val clustered = Mat(labMat.size(), labMat.type())
+        val numChannels = centers.cols() // should be 3
+
+        var labelIndex = 0
+        for (y in 0 until labMat.rows()) {
+            for (x in 0 until labMat.cols()) {
+                val clusterIdx = labels.get(labelIndex, 0)[0].toInt()
+
+                // Read each channel individually (works for CV_32S)
+                val color = DoubleArray(numChannels)
+                for (c in 0 until numChannels) {
+                    color[c] = centers.get(clusterIdx, c)[0] // get returns DoubleArray of length 1
+                }
+
+                val bgrColor = ByteArray(numChannels)
+                for (i in 0 until numChannels) {
+                    bgrColor[i] = color[i].toInt().coerceIn(0, 255).toByte()
+                }
+
+                clustered.put(y, x, bgrColor)
+                labelIndex++
+            }
+        }
+        SaveImageUtil.saveMatAsImage(context, clustered, "03_kmeans_clustered")
+
+        // Convert back to grayscale for contour extraction
+        val clusteredBgr = Mat()
+        Imgproc.cvtColor(clustered, clusteredBgr, Imgproc.COLOR_Lab2BGR)
+        val gray = Mat()
+        Imgproc.cvtColor(clusteredBgr, gray, Imgproc.COLOR_BGR2GRAY)
+        SaveImageUtil.saveMatAsImage(context, gray, "04_gray")
+
+        // Optional smoothing before morphology
+        Imgproc.GaussianBlur(gray, gray, Size(5.0, 5.0), 2.0)
+
+        // Morphological cleanup (close gaps and remove noise)
+        val kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, Size(5.0, 5.0))
+        val morph = Mat()
+        Imgproc.morphologyEx(gray, morph, Imgproc.MORPH_CLOSE, kernel)
+        Imgproc.morphologyEx(morph, morph, Imgproc.MORPH_OPEN, kernel)
+        SaveImageUtil.saveMatAsImage(context, morph, "05_morph_cleaned")
+
+        // Threshold to binary for contour detection
+        val binary = Mat()
+        Imgproc.threshold(morph, binary, 0.0, 255.0, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU)
+        SaveImageUtil.saveMatAsImage(context, binary, "06_binary")
+
+        // Find contours
+        val contours = mutableListOf<MatOfPoint>()
+        Imgproc.findContours(binary, contours, Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE)
+
+        val allPolygons = mutableListOf<List<Point>>()
+
+        // Approximate & convert contours to polygons
+        for (contour in contours) {
+            val contour2f = MatOfPoint2f(*contour.toArray())
+            val approxCurve = MatOfPoint2f()
+            val epsilon = 0.005 * Imgproc.arcLength(contour2f, true)
+            Imgproc.approxPolyDP(contour2f, approxCurve, epsilon, true)
+
+            // Filter out small/noisy areas
+            if (Imgproc.contourArea(approxCurve) > 500) {
+                val approxPoints = approxCurve.toList()
+                if (approxPoints.size >= 3) {
+                    val geoJsonPoints = convertPixelToGeo(
+                        pixels = approxPoints,
+                        center = center,
+                        zoom = zoom,
+                        tileWidth = bitmap.width,
+                        tileHeight = bitmap.height
+                    )
+                    allPolygons.add(geoJsonPoints)
+                }
+            }
+        }
+
         return allPolygons
     }
 
