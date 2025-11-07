@@ -60,7 +60,7 @@ object GetSatelliteImageUtil {
                 onResult(null)
             } else {
 
-                val uri = SaveImageUtil.saveBitmapToDownloads(context, bitmap, "satellite_snapshot")
+                val uri = SaveImageUtil.saveBitmapToDownloads(context, bitmap,"satellite_snapshot_${System.currentTimeMillis()}")
                 if (uri != null) {
                     Log.d("GetSatelliteImageUtil", "Snapshot saved: $uri")
                 } else {

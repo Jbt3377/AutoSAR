@@ -29,9 +29,13 @@ object ImageSegmentationUtil {
         center: Point,
         zoom: Double
     ): List<List<Point>> {
-        return extractPolygonsFromImageApproach1(
+
+        // Crop out logos and trim edges while preserving square aspect
+        val croppedBitmap = cropSatelliteImage(bitmap)
+
+        return extractPolygonsFromImageApproach2(
             context = context,
-            bitmap = bitmap,
+            bitmap = croppedBitmap,
             center = center,
             zoom = zoom
         )
@@ -273,5 +277,32 @@ object ImageSegmentationUtil {
 
             Point.fromLngLat(lonDeg, latDeg)
         }
+    }
+
+    /**
+     * Crops the satellite bitmap to remove logos and edges while keeping the image square.
+     */
+    private fun cropSatelliteImage(original: Bitmap): Bitmap {
+        val width = original.width
+        val height = original.height
+
+        // Determine the largest square size
+        val squareSize = minOf(width, height)
+
+        // Center-crop the square
+        val xOffset = (width - squareSize) / 2
+        val yOffset = (height - squareSize) / 2
+
+        // Trim a small margin from all sides (removes logos and borders)
+        val trimPercent = 0.1f
+        val trim = (squareSize * trimPercent).toInt()
+
+        return Bitmap.createBitmap(
+            original,
+            xOffset + trim,
+            yOffset + trim,
+            squareSize - trim * 2,
+            squareSize - trim * 2
+        )
     }
 }

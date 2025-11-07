@@ -45,7 +45,7 @@ class SectoringService(private val context: Context) {
         GetSatelliteImageUtil.captureSatelliteTile(
             context = context,
             center = centerPoint,
-            zoom = 16.5
+            zoom = 15.0
         ) { bitmap ->
             if (bitmap != null) {
 
@@ -54,7 +54,7 @@ class SectoringService(private val context: Context) {
                     context,
                     bitmap = bitmap,
                     center = centerPoint,
-                    zoom = 16.5
+                    zoom = 15.0
                 )
 
                 Log.d("Polygons", "Polygon information: $polygons")
